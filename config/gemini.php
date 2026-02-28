@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'api_key' => env('GEMINI_API_KEY'),
+
+    // اتركي هذا فارغاً أو احذفيه ليعمل الافتراضي بشكل صحيح
+    'base_url' => env('GEMINI_BASE_URL'),
+
+    'request_timeout' => env('GEMINI_REQUEST_TIMEOUT', 30),
+];

@@ -1,0 +1,46 @@
+<?php
+
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\InstructorController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\StudentController;
+use Illuminate\Support\Facades\Route;
+
+// Route::get('/user', function (Request $request) {
+//     return $request->user();
+// })->middleware('auth:sanctum');
+Route::prefix('admin')->controller(AdminController::class)->group(function(){
+Route::post('register','register');
+Route::post('login','login');
+Route::delete('deletecourse/{id}','deletecourse')->middleware('auth:admin');
+Route::delete('deletelesson/{id}','deletelesson')->middleware('auth:admin');
+});
+
+
+Route::prefix('instructor')->controller(InstructorController::class)->group(function(){
+Route::post('register','register');
+Route::post('login','login');
+Route::get('my-students','my_student')->middleware('auth:instructor');
+Route::put('edit','edit')->middleware('auth:instructor');
+Route::put('updatepassword','updatepassword')->middleware('auth:instructor');
+});
+Route::prefix('student')->controller(StudentController::class)->group(function(){
+Route::post('register','register');
+Route::post('login','login');
+Route::post('join','join')->middleware('auth:student');
+Route::get('getallcourses','courses')->middleware('auth:student');
+Route::get('getmycourses','hiscourses')->middleware('auth:student');
+Route::get('getmylessons','hislessons')->middleware('auth:student');
+Route::post('addreview','AddReview')->middleware('auth:student');
+});
+
+
+Route::prefix('course')->middleware('auth:instructor')->controller(CourseController::class)->group(function(){
+Route::post('add','add');
+});
+Route::prefix('lesson')->middleware('auth:instructor')->controller(LessonController::class)->group(function(){
+Route::post('add','add');
+});
+
+
