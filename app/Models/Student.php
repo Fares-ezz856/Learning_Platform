@@ -26,4 +26,7 @@ class Student extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function messages() {
+    return $this->morphMany(Message::class, 'sender');
+}
 }

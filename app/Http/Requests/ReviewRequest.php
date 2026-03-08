@@ -22,8 +22,9 @@ class ReviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-           'message'=>'required',
-           
+           'message'=>'required|string',
+           'instructor_id'=>'required'
+
         ];
     }
 }

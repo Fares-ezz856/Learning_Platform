@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InstructorRequest;
+use App\Http\Resources\ReviewResource;
+use App\Http\Resources\StudentResource;
 use App\Models\Course;
 use App\Models\Instructor;
+use App\Models\Lesson;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -35,12 +39,12 @@ class InstructorController extends Controller
     public function my_student(){
         $instructor_id=auth('instructor')->id();
         $coursewithstudent=Course::where('instructor_id',$instructor_id)->with('students:id,name')->get();
-        return $this->success('Students list by course', 200, $coursewithstudent);
+        return $this->success('Students list by course', 200, StudentResource::collection($coursewithstudent));
     }
     public function edit(Request $request){
         $instructor=auth('instructor')->user();
         $validated=$request->validate([
-            'name'=>'sometimes,min:3',
+            'name'=>'sometimes|min:3',
             'bio'=>'sometimes'
         ]);
         $instructor->update($validated);
@@ -61,5 +65,46 @@ class InstructorController extends Controller
                 'password'=>Hash::make($request->new_password)
             ]);
             return $this->success('Password Updated successfully',200);
+    }
+    public function updatecourse($id,Request $request){
+        $instructor=auth('instructor')->user();
+        $instructorid=$instructor->id;
+        $course=Course::where('instructor_id',$instructorid)->find($id);
+        if(!$course){
+            return $this->error('This Course Not Found',404);
+        }
+        $validated=$request->validate([
+            'title'=>'sometimes|string',
+            'description'=>'sometimes|string',
+            'status'=>'sometimes|in:pending,approved,rejected'
+        ]);
+        $course->update($validated);
+        return $this->success('This Course Updated Successfully',200);
+    }
+     public function getlesson($id){
+        $lessons=Lesson::findOrFail($id);
+        if($lessons->content_type!='article'){
+            $lessons->content_data=asset('/storage/'.$lessons->content_data);
+        }
+        return $this->success('This is Lesson',200,$lessons);
+    }
+
+    public function getreviews(){
+        $reviews=Review::where('instructor_id',auth('instructor')->id())->with('student:id,name')->get();
+        if($reviews->isEmpty()){
+            return $this->error('Not Found Any Review For You',404);
+        }
+        return $this->success('This is Your Reviews',200,ReviewResource::collection($reviews));
+    }
+
+    public function approvedcourse($id){
+        $course=Course::where('instructor_id',auth('instructor')->user()->id)->find($id);
+            if(!$course){
+                return $this->error('This Course Not Found',404);
+            }
+            $course->update([
+                'status'=>'approved'
+            ]);
+return $this->success('Your Course'.$course->name.'Approved Successfully',200);
     }
 }

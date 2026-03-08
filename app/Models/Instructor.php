@@ -22,4 +22,10 @@ class Instructor extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function messages() {
+    return $this->morphMany(Message::class, 'sender');
+}
+public function reviews(){
+    return $this->hasMany(Review::class);
+}
 }

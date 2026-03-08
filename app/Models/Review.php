@@ -10,4 +10,7 @@ class Review extends Model
     public function student(){
         return $this->belongsTo(Student::class);
     }
+    public function instructor(){
+        return $this->belongsTo(Instructor::class);
+    }
 }

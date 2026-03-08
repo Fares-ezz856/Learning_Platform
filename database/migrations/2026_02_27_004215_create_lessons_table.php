@@ -15,8 +15,10 @@ return new class extends Migration
           $table->id();
         $table->foreignId('course_id')->constrained()->onDelete('cascade'); // مربوط بجدول الكورسات
         $table->string('title');
-        $table->string('video_url'); // رابط الفيديو
-        $table->integer('order')->default(1); // ترتيب الدرس
+       
+        $table->enum('content_type',['video','pdf','image','article']);
+        $table->text('content_data');
+        $table->integer('order')->default(1);
         $table->timestamps();
         });
     }

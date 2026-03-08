@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\Review;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
@@ -69,9 +70,35 @@ class StudentController extends Controller
         $reviewRequest->validated();
         Review::create([
             'message'=>$reviewRequest->message,
-            'student_id'=>auth('student')->id()
+            'student_id'=>auth('student')->id(),
+            'instructor_id'=>$reviewRequest->instructor_id
         ]);
         return $this->success('Review Added Successfully',201);
+    }
+
+        public function edit(Request $request){
+        $student=auth('student')->user();
+        $validated=$request->validate([
+            'name'=>'sometimes,min|3',
+        ]);
+        $student->update($validated);
+        return $this->success('Profile updated successfully', 200, $student);
+    }
+
+    public function updatepassword(Request $request){
+        $student=auth('student')->user();
+        $password=$student->password;
+        $request->validate([
+            'password'=>'required',
+            'new_password'=>'required|min:6|confirmed'
+        ]);
+      if (!Hash::check($request->password, $password)) {
+        return $this->error('Your current password is wrong', 401);
+    }
+            $student->update([
+                'password'=>Hash::make($request->new_password)
+            ]);
+            return $this->success('Password Updated successfully',200);
     }
     }
 
