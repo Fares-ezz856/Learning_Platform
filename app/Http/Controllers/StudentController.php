@@ -60,7 +60,7 @@ class StudentController extends Controller
     }
     public function hislessons(){
         $student=auth('student')->user();
-        $lessons=$student->courses()->with('lessons:id,title,course_id')->get();
+        $lessons=$student->courses()->wherePivot('status','approved')->with('lessons:id,title,course_id')->get();
              if ($lessons->isempty()) {
         return $this->success('You have not joined any lessons yet.', 200);
     }

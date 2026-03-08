@@ -76,4 +76,26 @@ class AdminController extends Controller
             ]);
             return $this->success('Password Updated successfully',200);
     }
+
+       public function approvedcourse($id)
+    {
+        $course = Course::find($id);
+        if (! $course) {
+            return $this->error('This Course Not Found', 404);
+        }
+        $course->update([
+            'status' => 'approved',
+        ]);
+        return $this->success('Your Course' . $course->name . ' Approved Successfully', 200);
+    }
+    public function rejectedcourse($id){
+        $course=Course::find($id);
+          if (! $course) {
+            return $this->error('This Course Not Found', 404);
+        }
+        $course->update([
+            'status' => 'rejected',
+        ]);
+        return $this->success('Your Course' . $course->name . ' Rejected Successfully', 200);
+    }
     }

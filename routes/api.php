@@ -11,17 +11,18 @@ use Illuminate\Support\Facades\Route;
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
-Route::prefix('admin')->controller(AdminController::class)->group(function(){
+Route::middleware('throttle:api')->prefix('admin')->controller(AdminController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
 Route::delete('deletecourse/{id}','deletecourse')->middleware('auth:admin');
 Route::delete('deletelesson/{id}','deletelesson')->middleware('auth:admin');
 Route::put('edit','edit')->middleware('auth:admin');
 Route::put('updatepassword','updatepassword')->middleware('auth:admin');
+Route::put('approvedcourse/{id}','approvedcourse')->middleware('auth:admin');
 });
 
 
-Route::prefix('instructor')->controller(InstructorController::class)->group(function(){
+Route::middleware('throttle:api')->prefix('instructor')->controller(InstructorController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
 Route::get('my-students','my_student')->middleware('auth:instructor');
@@ -30,9 +31,11 @@ Route::put('updatepassword','updatepassword')->middleware('auth:instructor');
 Route::put('updatecourse/{id}','updatecourse')->middleware('auth:instructor');
 Route::get('getlesson/{id}','getlesson')->middleware('auth:instructor');
 Route::get('getallreviews','getreviews')->middleware('auth:instructor');
-Route::put('approvedcourse/{id}','approvedcourse')->middleware('auth:instructor');
+Route::get('mycourses','mycourses')->middleware('auth:instructor');
+Route::put('updatestatus/{id}','updatestatus')->middleware('auth:instructor');
+
 });
-Route::prefix('student')->controller(StudentController::class)->group(function(){
+Route::middleware('throttle:api')->prefix('student')->controller(StudentController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
 Route::post('join','join')->middleware('auth:student');
