@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminRequest;
+use App\Http\Requests\InstructorRequest;
+use App\Http\Requests\StudentRequest;
 use App\Models\Admin;
 use App\Models\Course;
+use App\Models\Instructor;
 use App\Models\Lesson;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -107,4 +111,42 @@ class AdminController extends Controller
         return $this->success('Your Course' . $course->name . ' Rejected Successfully', 200);
     }
 
+    public function data(){
+        $instructor=Instructor::count();
+        $student=Student::count();
+        $data=[
+            'instructor'=>$instructor,
+            'student'=>$student
+        ];
+        return $this->success('This is Count Of Instructor And Student',200,$data);
+    }
+    public function deletestudent($id){
+        $student=Student::find($id);
+
+        if(!$student){
+            return $this->error('This Student Not Found',200);
+        }
+         $studentname=$student->name;
+        $student->delete();
+        return $this->success('This Student '.$studentname. ' Deleted Successfully',200);
+    }
+    public function deleteinstructor($id){
+        $instructor=Instructor::find($id);
+        if(!$instructor){
+            return $this->error('This Instructor Not Found',200);
+        }
+        $instructorname=$instructor->name;
+        $instructor->delete();
+        return $this->success('This Instructor '.$instructorname.' Deleted Successfully',200);
+    }
+    public function addstudent(StudentRequest $studentRequest){
+        $validated=$studentRequest->validated();
+        Student::create($validated);
+        return $this->success('Student Added Successfully',201);
+    }
+        public function addinstructor(InstructorRequest $instructorRequest){
+        $validated=$instructorRequest->validated();
+        Instructor::create($validated);
+        return $this->success('Instructor Added Successfully',201);
+    }
     }

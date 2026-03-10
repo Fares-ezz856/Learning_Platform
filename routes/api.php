@@ -20,6 +20,11 @@ Route::delete('deletelesson/{id}','deletelesson')->middleware('auth:admin');
 Route::put('edit','edit')->middleware('auth:admin');
 Route::put('updatepassword','updatepassword')->middleware('auth:admin');
 Route::put('approvedcourse/{id}','approvedcourse')->middleware('auth:admin');
+Route::get('data','data')->middleware('auth:admin');
+Route::post('addstudent','addstudent')->middleware('auth:admin');
+Route::post('addinstructor','addinstructor')->middleware('auth:admin');
+Route::delete('deletestudent/{id}','deletestudent')->middleware('auth:admin');
+Route::delete('deleteinstructor/{id}','deleteinstructor')->middleware('auth:admin');
 });
 
 
