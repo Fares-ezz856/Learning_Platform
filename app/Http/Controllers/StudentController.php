@@ -33,6 +33,15 @@ class StudentController extends Controller
         $token=$email->createToken('Student-Login')->plainTextToken;
         return $this->success('Login Successfully',200,$token);
     }
+
+          public function logout(){
+        if(auth('student')->user()){
+            auth('student')->user()->currentAccessToken()->delete();
+        return $this->success('Logout Successfully',200);
+        }
+        return $this->error('No Active session Found',401);
+
+    }
     public function join(Request $request){
         $student=auth('student')->user();
      $validated = $request->validate([

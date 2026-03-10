@@ -38,6 +38,15 @@ class InstructorController extends Controller
         return $this->success('Login Successfully', 200, $token);
     }
 
+        public function logout(){
+        if(auth('instructor')->user()){
+            auth('instructor')->user()->currentAccessToken()->delete();
+        return $this->success('Logout Successfully',200);
+        }
+        return $this->error('No Active session Found',401);
+
+    }
+
     public function my_student()
     {
         $instructor_id     = auth('instructor')->id();
@@ -75,14 +84,14 @@ class InstructorController extends Controller
     {
         $instructor   = auth('instructor')->user();
         $instructorid = $instructor->id;
-        $course       = Course::where('instructor_id', $instructorid)->find($id);
+        $course       = Course::where('instructor_id', $instructorid)->where('status','approved')->find($id);
         if (! $course) {
             return $this->error('This Course Not Found', 404);
         }
         $validated = $request->validate([
             'title'       => 'sometimes|string',
             'description' => 'sometimes|string',
-            'status'      => 'sometimes|in:pending,approved,rejected',
+
         ]);
         $course->update($validated);
         return $this->success('This Course Updated Successfully', 200);
@@ -115,7 +124,7 @@ return $this->success('This is Your Courses',200,ApprovedCourseResource::collect
 public function updatestatus($id,Request $request){
     $request->validate([
         'student_id'=>'required|exists:students,id',
-        'status'=>'required|in:approved, rejected',
+        'status'=>'required|in:pending,approved,rejected',
     ]);
     $course=Course::where('instructor_id',auth('instructor')->id())->findOrFail($id);
     $course->students()->updateExistingPivot($request->student_id,[

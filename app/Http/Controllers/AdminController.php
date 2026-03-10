@@ -33,6 +33,14 @@ class AdminController extends Controller
         $token=$email->createToken('Admin-Login')->plainTextToken;
         return $this->success('Login Successfully',200,$token);
     }
+    public function logout(){
+        if(auth('admin')->user()){
+            auth('admin')->user()->currentAccessToken()->delete();
+        return $this->success('Logout Successfully',200);
+        }
+        return $this->error('No Active session Found',401);
+
+    }
     public function deletecourse($id){
         $course=Course::find($id);
         if(!$course){
@@ -98,4 +106,5 @@ class AdminController extends Controller
         ]);
         return $this->success('Your Course' . $course->name . ' Rejected Successfully', 200);
     }
+
     }

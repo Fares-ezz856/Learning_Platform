@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('throttle:api')->prefix('admin')->controller(AdminController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
+Route::get('logout','logout')->middleware('auth:admin');
 Route::delete('deletecourse/{id}','deletecourse')->middleware('auth:admin');
 Route::delete('deletelesson/{id}','deletelesson')->middleware('auth:admin');
 Route::put('edit','edit')->middleware('auth:admin');
@@ -25,6 +26,7 @@ Route::put('approvedcourse/{id}','approvedcourse')->middleware('auth:admin');
 Route::middleware('throttle:api')->prefix('instructor')->controller(InstructorController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
+Route::get('logout','logout')->middleware('auth:instructor');
 Route::get('my-students','my_student')->middleware('auth:instructor');
 Route::put('edit','edit')->middleware('auth:instructor');
 Route::put('updatepassword','updatepassword')->middleware('auth:instructor');
@@ -38,6 +40,7 @@ Route::put('updatestatus/{id}','updatestatus')->middleware('auth:instructor');
 Route::middleware('throttle:api')->prefix('student')->controller(StudentController::class)->group(function(){
 Route::post('register','register');
 Route::post('login','login');
+Route::get('logout','logout')->middleware('auth:student');
 Route::post('join','join')->middleware('auth:student');
 Route::get('getallcourses','courses')->middleware('auth:student');
 Route::get('getmycourses','hiscourses')->middleware('auth:student');
