@@ -114,9 +114,11 @@ class AdminController extends Controller
     public function data(){
         $instructor=Instructor::count();
         $student=Student::count();
+        $course=Course::count();
         $data=[
             'instructor'=>$instructor,
-            'student'=>$student
+            'student'=>$student,
+            'course'=>$course
         ];
         return $this->success('This is Count Of Instructor And Student',200,$data);
     }

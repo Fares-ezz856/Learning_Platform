@@ -40,7 +40,7 @@ Route::get('getlesson/{id}','getlesson')->middleware('auth:instructor');
 Route::get('getallreviews','getreviews')->middleware('auth:instructor');
 Route::get('mycourses','mycourses')->middleware('auth:instructor');
 Route::put('updatestatus/{id}','updatestatus')->middleware('auth:instructor');
-
+Route::get('countcourse','countcourse')->middleware('auth:instructor');
 });
 Route::middleware('throttle:api')->prefix('student')->controller(StudentController::class)->group(function(){
 Route::post('register','register');

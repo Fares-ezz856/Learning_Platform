@@ -132,4 +132,12 @@ public function updatestatus($id,Request $request){
     ]);
     return $this->success('Student status updated successfully to '.$request->status,200);
 }
+
+public function countcourse(){
+    $count=Course::where('instructor_id',auth('instructor')->user()->id)->count();
+    $data=[
+        'count'=>$count
+    ];
+    return $this->success('This is count of courses',200,$data);
+}
 }
