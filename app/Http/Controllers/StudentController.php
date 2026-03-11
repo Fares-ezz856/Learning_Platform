@@ -109,5 +109,20 @@ class StudentController extends Controller
             ]);
             return $this->success('Password Updated successfully',200);
     }
-    }
 
+    public function dashboard(){
+        $student = auth('student')->user();
+        $course_count = $student->courses()->count();
+        $approved_courses = $student->courses()->wherePivot('status', 'approved')->get();
+        $lesson_count = 0;
+        foreach ($approved_courses as $course) {
+            $lesson_count += $course->lessons()->count();
+        }
+
+        $data = [
+            'total_courses' => $course_count,
+            'total_lessons' => $lesson_count,
+        ];
+        return $this->success('Student Dashboard Data', 200, $data);
+    }
+    }

@@ -25,6 +25,7 @@ Route::post('addstudent','addstudent')->middleware('auth:admin');
 Route::post('addinstructor','addinstructor')->middleware('auth:admin');
 Route::delete('deletestudent/{id}','deletestudent')->middleware('auth:admin');
 Route::delete('deleteinstructor/{id}','deleteinstructor')->middleware('auth:admin');
+Route::get('dashboard','dashboard')->middleware('auth:admin');
 });
 
 
@@ -41,6 +42,7 @@ Route::get('getallreviews','getreviews')->middleware('auth:instructor');
 Route::get('mycourses','mycourses')->middleware('auth:instructor');
 Route::put('updatestatus/{id}','updatestatus')->middleware('auth:instructor');
 Route::get('countcourse','countcourse')->middleware('auth:instructor');
+Route::get('dashboard','dashboard')->middleware('auth:instructor');
 });
 Route::middleware('throttle:api')->prefix('student')->controller(StudentController::class)->group(function(){
 Route::post('register','register');
@@ -53,6 +55,7 @@ Route::get('getmylessons','hislessons')->middleware('auth:student');
 Route::post('addreview','AddReview')->middleware('auth:student');
 Route::put('edit','edit')->middleware('auth:student');
 Route::put('updatepassword','updatepassword')->middleware('auth:student');
+Route::get('dashboard','dashboard')->middleware('auth:student');
 });
 
 Route::post('instructor/sendmessage',[MessageController::class,'store'])->middleware('auth:instructor');

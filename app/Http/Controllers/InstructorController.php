@@ -140,4 +140,18 @@ public function countcourse(){
     ];
     return $this->success('This is count of courses',200,$data);
 }
+
+public function dashboard(){
+    $instructor_id = auth('instructor')->id();
+    $course_count = Course::where('instructor_id', $instructor_id)->count();
+    $student_count = Course::where('instructor_id', $instructor_id)->withCount('students')->get()->sum('students_count');
+    $review_count = Review::where('instructor_id', $instructor_id)->count();
+
+    $data = [
+        'total_courses' => $course_count,
+        'total_students' => $student_count,
+        'total_reviews' => $review_count,
+    ];
+    return $this->success('Instructor Dashboard Data',200,$data);
+}
 }

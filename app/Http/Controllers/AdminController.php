@@ -111,16 +111,20 @@ class AdminController extends Controller
         return $this->success('Your Course' . $course->name . ' Rejected Successfully', 200);
     }
 
-    public function data(){
+    public function dashboard(){
         $instructor=Instructor::count();
         $student=Student::count();
         $course=Course::count();
+        $pending_course=Course::where('status','pending')->count();
+        $approved_course=Course::where('status','approved')->count();
         $data=[
             'instructor'=>$instructor,
             'student'=>$student,
-            'course'=>$course
+            'course'=>$course,
+            'pending_course'=>$pending_course,
+            'approved_course'=>$approved_course
         ];
-        return $this->success('This is Count Of Instructor And Student',200,$data);
+        return $this->success('Admin Dashboard Data',200,$data);
     }
     public function deletestudent($id){
         $student=Student::find($id);
@@ -151,4 +155,6 @@ class AdminController extends Controller
         Instructor::create($validated);
         return $this->success('Instructor Added Successfully',201);
     }
+    
+ 
     }
