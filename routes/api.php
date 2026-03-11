@@ -68,4 +68,3 @@ Route::prefix('lesson')->middleware('auth:instructor')->controller(LessonControl
 Route::post('add','add');
 });
 
-

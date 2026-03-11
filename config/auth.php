@@ -52,6 +52,10 @@ return [
             'driver' => 'sanctum',
             'provider' => 'students',
         ],
+        'admin_web' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
     ],
 
     /*

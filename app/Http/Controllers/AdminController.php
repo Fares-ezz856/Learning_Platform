@@ -126,6 +126,88 @@ class AdminController extends Controller
         ];
         return $this->success('Admin Dashboard Data',200,$data);
     }
+
+    public function dashboardView(){
+        $instructor=Instructor::count();
+        $student=Student::count();
+        $course=Course::count();
+        $pending_course=Course::where('status','pending')->count();
+        $approved_course=Course::where('status','approved')->count();
+        
+        return view('admin.dashboard', compact('instructor', 'student', 'course', 'pending_course', 'approved_course'));
+    }
+
+    public function allCourses(){
+        $courses = Course::with('instructor')->get();
+        return view('admin.courses.index', compact('courses'));
+    }
+
+    public function pendingCourses(){
+        $courses = Course::with('instructor')->where('status', 'pending')->get();
+        return view('admin.courses.pending', compact('courses'));
+    }
+
+    public function approvedcourseWeb($id){
+        $course=Course::find($id);
+        if(!$course){
+            return redirect()->back()->with('error', 'Course Not Found');
+        }
+        $course->update([
+            'status'=>'approved'
+        ]);
+        return redirect()->back()->with('success', 'Course Approved Successfully');
+    }
+
+    public function rejectedcourseWeb($id){
+        $course=Course::find($id);
+        if(!$course){
+            return redirect()->back()->with('error', 'Course Not Found');
+        }
+        $course->update([
+            'status'=>'rejected'
+        ]);
+        return redirect()->back()->with('success', 'Course Rejected Successfully');
+    }
+
+    public function deletecourseWeb($id){
+        $course=Course::find($id);
+        if(!$course){
+            return redirect()->back()->with('error', 'Course Not Found');
+        }
+        $course->delete();
+        return redirect()->back()->with('success', 'Course Deleted Successfully');
+    }
+
+    public function allInstructors(){
+        $instructors = Instructor::all();
+        return view('admin.users.instructors', compact('instructors'));
+    }
+
+    public function allStudents(){
+        $students = Student::all();
+        return view('admin.users.students', compact('students'));
+    }
+
+    public function deletestudentWeb($id){
+        $student=Student::find($id);
+        if(!$student){
+            return redirect()->back()->with('error', 'Student Not Found');
+        }
+        $studentname=$student->name;
+        $student->delete();
+        return redirect()->back()->with('success', 'Student '.$studentname.' Deleted Successfully');
+    }
+
+    public function deleteinstructorWeb($id){
+        $instructor=Instructor::find($id);
+        if(!$instructor){
+            return redirect()->back()->with('error', 'Instructor Not Found');
+        }
+        $instructorname=$instructor->name;
+        $instructor->delete();
+        return redirect()->back()->with('success', 'Instructor '.$instructorname.' Deleted Successfully');
+    }
+
     public function deletestudent($id){
         $student=Student::find($id);
 
@@ -150,11 +232,9 @@ class AdminController extends Controller
         Student::create($validated);
         return $this->success('Student Added Successfully',201);
     }
-        public function addinstructor(InstructorRequest $instructorRequest){
+    public function addinstructor(InstructorRequest $instructorRequest){
         $validated=$instructorRequest->validated();
         Instructor::create($validated);
         return $this->success('Instructor Added Successfully',201);
     }
-    
- 
-    }
+}
