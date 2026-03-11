@@ -97,6 +97,14 @@
           </li>
           @endif
 
+          <li class="nav-header">COMMUNICATION</li>
+          <li class="nav-item">
+            <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-comments"></i>
+              <p>Public Chat</p>
+            </a>
+          </li>
+
           <li class="nav-header">ACCOUNT</li>
           <li class="nav-item">
             <a href="#" class="nav-link">

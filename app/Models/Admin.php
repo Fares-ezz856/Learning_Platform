@@ -19,4 +19,7 @@ class Admin extends Authenticatable
         ];
     }
 
+    public function messages() {
+        return $this->morphMany(Message::class, 'sender');
+    }
 }

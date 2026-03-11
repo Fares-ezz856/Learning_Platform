@@ -8,6 +8,7 @@ use App\Http\Controllers\UserAuthController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\ChatController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -53,6 +54,12 @@ Route::middleware(['auth:student_web'])->group(function () {
     Route::get('/student/browse-courses', [StudentController::class, 'browseCoursesWeb'])->name('student.courses.browse');
     Route::post('/student/courses/{id}/join', [StudentController::class, 'joinCourseWeb'])->name('student.courses.join');
     Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
+});
+
+// Public Chat Routes
+Route::middleware(['auth:admin_web,instructor_web,student_web'])->group(function () {
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
 });
 
 // Instructor Dashboard Routes
