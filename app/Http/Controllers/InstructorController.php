@@ -141,17 +141,48 @@ public function countcourse(){
     return $this->success('This is count of courses',200,$data);
 }
 
-public function dashboard(){
-    $instructor_id = auth('instructor')->id();
-    $course_count = Course::where('instructor_id', $instructor_id)->count();
-    $student_count = Course::where('instructor_id', $instructor_id)->withCount('students')->get()->sum('students_count');
-    $review_count = Review::where('instructor_id', $instructor_id)->count();
+    public function dashboardView(){
+        $instructor = auth('instructor_web')->user();
+        if (!$instructor) {
+             return redirect()->route('instructor.login');
+        }
+        $instructor_id = $instructor->id;
+        
+        $course_count = Course::where('instructor_id', $instructor_id)->count();
+        $student_count = Course::where('instructor_id', $instructor_id)->withCount('students')->get()->sum('students_count');
+        $review_count = Review::where('instructor_id', $instructor_id)->count();
+        
+        $my_courses = Course::where('instructor_id', $instructor_id)->withCount('students')->get();
 
-    $data = [
-        'total_courses' => $course_count,
-        'total_students' => $student_count,
-        'total_reviews' => $review_count,
-    ];
-    return $this->success('Instructor Dashboard Data',200,$data);
-}
+        return view('instructor.dashboard', compact('instructor', 'course_count', 'student_count', 'review_count', 'my_courses'));
+    }
+
+    public function myCoursesWeb()
+    {
+        $instructor = auth('instructor_web')->user();
+        $courses = Course::where('instructor_id', $instructor->id)->withCount('students')->get();
+        return view('instructor.courses.index', compact('courses'));
+    }
+
+    public function myStudentsWeb()
+    {
+        $instructor = auth('instructor_web')->user();
+        $courses = Course::where('instructor_id', $instructor->id)->with('students')->get();
+        return view('instructor.students.index', compact('courses'));
+    }
+
+    public function updateStudentStatusWeb(Request $request, $courseId)
+    {
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'status' => 'required|in:pending,approved,rejected',
+        ]);
+
+        $course = Course::where('instructor_id', auth('instructor_web')->id())->findOrFail($courseId);
+        $course->students()->updateExistingPivot($request->student_id, [
+            'status' => $request->status,
+        ]);
+
+        return back()->with('success', 'Student status updated successfully.');
+    }
 }

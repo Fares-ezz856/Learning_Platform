@@ -6,9 +6,12 @@ use App\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReviewRequest;
 use App\Http\Requests\StudentRequest;
-use App\Models\Course;
+
 use App\Models\Review;
 use App\Models\Student;
+use App\Models\Course;
+use App\Models\Instructor;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -110,19 +113,34 @@ class StudentController extends Controller
             return $this->success('Password Updated successfully',200);
     }
 
-    public function dashboard(){
-        $student = auth('student')->user();
+    public function dashboardView(){
+        $student = auth('student_web')->user();
+        if (!$student) {
+            return redirect()->route('student.login');
+        }
         $course_count = $student->courses()->count();
         $approved_courses = $student->courses()->wherePivot('status', 'approved')->get();
         $lesson_count = 0;
         foreach ($approved_courses as $course) {
             $lesson_count += $course->lessons()->count();
         }
+        
+        $enrolled_courses = $student->courses()->with('instructor')->get();
 
-        $data = [
-            'total_courses' => $course_count,
-            'total_lessons' => $lesson_count,
-        ];
-        return $this->success('Student Dashboard Data', 200, $data);
+        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses'));
     }
+
+    public function myCoursesWeb()
+    {
+        $student = auth('student_web')->user();
+        $courses = $student->courses()->with('instructor')->get();
+        return view('student.courses.index', compact('courses'));
     }
+
+    public function courseLessonsWeb($courseId)
+    {
+        $student = auth('student_web')->user();
+        $course = $student->courses()->where('course_id', $courseId)->wherePivot('status', 'approved')->with('lessons')->firstOrFail();
+        return view('student.courses.lessons', compact('course'));
+    }
+}

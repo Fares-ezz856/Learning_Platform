@@ -5,7 +5,14 @@
         <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="index3.html" class="nav-link">Home</a>
+        @if(auth('admin_web')->check())
+             <a href="{{ route('admin.dashboard') }}" class="nav-link">Home</a>
+        @elseif (auth('instructor_web')->check())
+         <a href="{{ route('instructor.dashboard') }}" class="nav-link">Home</a>
+        @else
+        <a href="{{ route('student.dashboard') }}" class="nav-link">Home</a>
+        @endif
+
       </li>
       <li class="nav-item d-none d-sm-inline-block">
         <a href="#" class="nav-link">Contact</a>

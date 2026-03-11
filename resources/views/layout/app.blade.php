@@ -65,5 +65,6 @@
 
 <!-- PAGE SCRIPTS -->
 <script src="{{asset('dist/js/pages/dashboard2.js')}}"></script>
+@stack('scripts')
 </body>
 </html>

@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\GeminiController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\InstructorController;
+use App\Http\Controllers\UserAuthController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AdminAuthController;
@@ -31,6 +34,31 @@ Route::middleware(['auth:admin_web'])->group(function () {
 
     Route::get('/admin/students', [AdminController::class, 'allStudents'])->name('admin.students.index');
     Route::delete('/admin/students/{id}', [AdminController::class, 'deletestudentWeb'])->name('admin.students.delete');
+});
+
+// Instructor Authentication (Web)
+Route::get('/instructor/login', [UserAuthController::class, 'showInstructorLoginForm'])->name('instructor.login');
+Route::post('/instructor/login', [UserAuthController::class, 'instructorLogin'])->name('instructor.login.submit');
+Route::post('/instructor/logout', [UserAuthController::class, 'instructorLogout'])->name('instructor.logout');
+
+// Student Authentication (Web)
+Route::get('/student/login', [UserAuthController::class, 'showStudentLoginForm'])->name('student.login');
+Route::post('/student/login', [UserAuthController::class, 'studentLogin'])->name('student.login.submit');
+Route::post('/student/logout', [UserAuthController::class, 'studentLogout'])->name('student.logout');
+
+// Student Dashboard Routes
+Route::middleware(['auth:student_web'])->group(function () {
+    Route::get('/student/dashboard', [StudentController::class, 'dashboardView'])->name('student.dashboard');
+    Route::get('/student/courses', [StudentController::class, 'myCoursesWeb'])->name('student.courses.index');
+    Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
+});
+
+// Instructor Dashboard Routes
+Route::middleware(['auth:instructor_web'])->group(function () {
+    Route::get('/instructor/dashboard', [InstructorController::class, 'dashboardView'])->name('instructor.dashboard');
+    Route::get('/instructor/courses', [InstructorController::class, 'myCoursesWeb'])->name('instructor.courses.index');
+    Route::get('/instructor/students', [InstructorController::class, 'myStudentsWeb'])->name('instructor.students.index');
+    Route::post('/instructor/courses/{id}/status', [InstructorController::class, 'updateStudentStatusWeb'])->name('instructor.students.update-status');
 });
 
 Route::get('/gemini', [GeminiController::class, 'index'])->name('gemini.index');

@@ -133,8 +133,37 @@ class AdminController extends Controller
         $course=Course::count();
         $pending_course=Course::where('status','pending')->count();
         $approved_course=Course::where('status','approved')->count();
+        $rejected_course=Course::where('status','rejected')->count();
+
+        // Chart Data: Student Registration Trends (Last 7 Days)
+        $registrationData = [];
+        $registrationLabels = [];
+        // New Chart Data: Instructor Registration Trends (Last 7 Days)
+        $instructorData = [];
+        // New Chart Data: Enrollment Trends (Last 7 Days)
+        $enrollmentData = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $registrationLabels[] = $date->format('M d');
+            
+            $registrationData[] = Student::whereDate('created_at', $date->toDateString())->count();
+            $instructorData[] = Instructor::whereDate('created_at', $date->toDateString())->count();
+            $enrollmentData[] = \DB::table('student_courses')->whereDate('created_at', $date->toDateString())->count();
+        }
+
+        // Chart Data: Course Status Distribution
+        $courseDistribution = [
+            'approved' => $approved_course,
+            'pending' => $pending_course,
+            'rejected' => $rejected_course,
+        ];
         
-        return view('admin.dashboard', compact('instructor', 'student', 'course', 'pending_course', 'approved_course'));
+        return view('admin.dashboard', compact(
+            'instructor', 'student', 'course', 'pending_course', 'approved_course', 
+            'registrationData', 'registrationLabels', 'courseDistribution',
+            'instructorData', 'enrollmentData'
+        ));
     }
 
     public function allCourses(){
@@ -179,12 +208,12 @@ class AdminController extends Controller
     }
 
     public function allInstructors(){
-        $instructors = Instructor::all();
+        $instructors = Instructor::withCount(['courses', 'reviews'])->get();
         return view('admin.users.instructors', compact('instructors'));
     }
 
     public function allStudents(){
-        $students = Student::all();
+        $students = Student::withCount(['courses', 'reviews'])->get();
         return view('admin.users.students', compact('students'));
     }
 
