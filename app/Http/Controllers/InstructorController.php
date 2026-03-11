@@ -154,7 +154,27 @@ public function countcourse(){
         
         $my_courses = Course::where('instructor_id', $instructor_id)->withCount('students')->get();
 
-        return view('instructor.dashboard', compact('instructor', 'course_count', 'student_count', 'review_count', 'my_courses'));
+        // Chart Data: Instructor's Student Registration Trends (Last 7 Days)
+        $registrationData = [];
+        $registrationLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $registrationLabels[] = $date->format('M d');
+            // Count students who joined this instructor's courses on this date
+            $registrationData[] = \DB::table('student_courses')
+                ->join('courses', 'student_courses.course_id', '=', 'courses.id')
+                ->where('courses.instructor_id', $instructor_id)
+                ->whereDate('student_courses.created_at', $date->toDateString())
+                ->count();
+        }
+
+        $courseDistribution = [
+            'approved' => Course::where('instructor_id', $instructor_id)->where('status', 'approved')->count(),
+            'pending' => Course::where('instructor_id', $instructor_id)->where('status', 'pending')->count(),
+            'rejected' => Course::where('instructor_id', $instructor_id)->where('status', 'rejected')->count(),
+        ];
+
+        return view('instructor.dashboard', compact('instructor', 'course_count', 'student_count', 'review_count', 'my_courses', 'registrationData', 'registrationLabels', 'courseDistribution'));
     }
 
     public function myCoursesWeb()
@@ -184,5 +204,53 @@ public function countcourse(){
         ]);
 
         return back()->with('success', 'Student status updated successfully.');
+    }
+
+    public function createCourseWeb()
+    {
+        return view('instructor.courses.create');
+    }
+
+    public function storeCourseWeb(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        $validated['instructor_id'] = auth('instructor_web')->id();
+        $validated['status'] = 'pending'; // Default to pending review
+
+        Course::create($validated);
+
+        return redirect()->route('instructor.courses.index')->with('success', 'Course created and sent for approval.');
+    }
+
+    public function editCourseWeb($id)
+    {
+        $course = Course::where('instructor_id', auth('instructor_web')->id())->findOrFail($id);
+        return view('instructor.courses.edit', compact('course'));
+    }
+
+    public function updateCourseWeb(Request $request, $id)
+    {
+        $course = Course::where('instructor_id', auth('instructor_web')->id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        $course->update($validated);
+
+        return redirect()->route('instructor.courses.index')->with('success', 'Course updated successfully.');
+    }
+
+    public function destroyCourseWeb($id)
+    {
+        $course = Course::where('instructor_id', auth('instructor_web')->id())->findOrFail($id);
+        $course->delete();
+
+        return redirect()->route('instructor.courses.index')->with('success', 'Course deleted successfully.');
     }
 }

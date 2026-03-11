@@ -11,7 +11,7 @@
                     <h1>My Courses</h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <a href="#" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Course</a>
+                    <a href="{{ route('instructor.courses.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Create New Course</a>
                 </div>
             </div>
         </div>
@@ -19,6 +19,13 @@
 
     <section class="content">
         <div class="container-fluid">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <div class="card card-info card-outline">
                 <div class="card-header">
                     <h3 class="card-title">List of Courses You Manage</h3>
@@ -56,8 +63,12 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="#" class="btn btn-sm btn-default" title="View Details"><i class="fas fa-eye"></i></a>
-                                        <a href="#" class="btn btn-sm btn-info" title="Edit Course"><i class="fas fa-edit"></i></a>
+                                        <a href="{{ route('instructor.courses.edit', $course->id) }}" class="btn btn-sm btn-info" title="Edit Course"><i class="fas fa-edit"></i></a>
+                                        <form action="{{ route('instructor.courses.destroy', $course->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this course?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete Course"><i class="fas fa-trash"></i></button>
+                                        </form>
                                         <a href="#" class="btn btn-sm btn-warning" title="Manage Lessons"><i class="fas fa-list"></i></a>
                                     </div>
                                 </td>
@@ -68,7 +79,7 @@
                     @if($courses->isEmpty())
                         <div class="p-5 text-center">
                             <p class="text-muted">You haven't created any courses yet.</p>
-                            <a href="#" class="btn btn-info">Create Your First Course</a>
+                            <a href="{{ route('instructor.courses.create') }}" class="btn btn-info">Create Your First Course</a>
                         </div>
                     @endif
                 </div>

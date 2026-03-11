@@ -127,7 +127,14 @@ class StudentController extends Controller
         
         $enrolled_courses = $student->courses()->with('instructor')->get();
 
-        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses'));
+        // Chart Data: Enrollment Type Distribution
+        $statusDistribution = [
+            'approved' => $student->courses()->wherePivot('status', 'approved')->count(),
+            'pending' => $student->courses()->wherePivot('status', 'pending')->count(),
+            'rejected' => $student->courses()->wherePivot('status', 'rejected')->count(),
+        ];
+
+        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses', 'statusDistribution'));
     }
 
     public function myCoursesWeb()
@@ -142,5 +149,32 @@ class StudentController extends Controller
         $student = auth('student_web')->user();
         $course = $student->courses()->where('course_id', $courseId)->wherePivot('status', 'approved')->with('lessons')->firstOrFail();
         return view('student.courses.lessons', compact('course'));
+    }
+
+    public function browseCoursesWeb()
+    {
+        $student = auth('student_web')->user();
+        $joinedCourseIds = $student->courses()->pluck('courses.id')->toArray();
+        
+        $courses = Course::where('status', 'approved')
+            ->whereNotIn('id', $joinedCourseIds)
+            ->with('instructor')
+            ->withCount('students')
+            ->get();
+            
+        return view('student.courses.browse', compact('courses'));
+    }
+
+    public function joinCourseWeb($id)
+    {
+        $student = auth('student_web')->user();
+        
+        if ($student->courses()->where('course_id', $id)->exists()) {
+            return redirect()->back()->with('info', 'You have already requested to join this course.');
+        }
+
+        $student->courses()->attach($id, ['status' => 'pending']);
+        
+        return redirect()->route('student.courses.index')->with('success', 'Your request to join the course has been sent to the instructor.');
     }
 }

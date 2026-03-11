@@ -57,14 +57,12 @@
         </div>
 
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-8">
             <div class="card">
               <div class="card-header border-transparent">
                 <h3 class="card-title">My Recent Courses</h3>
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
+                  <a href="{{ route('student.courses.index') }}" class="btn btn-sm btn-primary">View All</a>
                 </div>
               </div>
               <div class="card-body p-0">
@@ -82,7 +80,7 @@
                     <tbody>
                     @foreach($enrolled_courses as $course)
                     <tr>
-                      <td><a href="#">#{{ $course->id }}</a></td>
+                      <td>#{{ $course->id }}</td>
                       <td>{{ $course->title }}</td>
                       <td>{{ $course->instructor->name }}</td>
                       <td>
@@ -95,7 +93,11 @@
                         @endif
                       </td>
                       <td>
-                        <a href="#" class="btn btn-sm btn-primary">Go to Lessons</a>
+                        @if($course->pivot->status == 'approved')
+                          <a href="{{ route('student.courses.lessons', $course->id) }}" class="btn btn-sm btn-primary">Lessons</a>
+                        @else
+                          <span class="text-muted small">Awaiting Access</span>
+                        @endif
                       </td>
                     </tr>
                     @endforeach
@@ -104,15 +106,47 @@
                 </div>
                 @if($enrolled_courses->isEmpty())
                 <div class="p-4 text-center">
-                  <p class="text-muted">You haven't joined any courses yet. <a href="#">Browse courses</a></p>
+                  <p class="text-muted">You haven't joined any courses yet. <a href="{{ route('student.courses.browse') }}">Browse available courses</a></p>
                 </div>
                 @endif
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Enrollment Status</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="statusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
               </div>
             </div>
           </div>
         </div>
       </div><!--/. container-fluid -->
     </section>
-    <!-- /.content -->
-  </div>
+</div>
+
+@push('scripts')
+<script>
+$(function () {
+  var statusChartCanvas = $('#statusChart').get(0).getContext('2d');
+  var statusData = {
+    labels: ['Approved', 'Pending', 'Rejected'],
+    datasets: [{
+      data: [{{ $statusDistribution['approved'] }}, {{ $statusDistribution['pending'] }}, {{ $statusDistribution['rejected'] }}],
+      backgroundColor : ['#28a745', '#ffc107', '#dc3545'],
+    }]
+  };
+  new Chart(statusChartCanvas, {
+    type: 'pie',
+    data: statusData,
+    options: {
+      maintainAspectRatio : false,
+      responsive : true,
+    }
+  });
+});
+</script>
+@endpush
 @endsection

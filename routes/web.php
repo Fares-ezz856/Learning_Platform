@@ -50,6 +50,8 @@ Route::post('/student/logout', [UserAuthController::class, 'studentLogout'])->na
 Route::middleware(['auth:student_web'])->group(function () {
     Route::get('/student/dashboard', [StudentController::class, 'dashboardView'])->name('student.dashboard');
     Route::get('/student/courses', [StudentController::class, 'myCoursesWeb'])->name('student.courses.index');
+    Route::get('/student/browse-courses', [StudentController::class, 'browseCoursesWeb'])->name('student.courses.browse');
+    Route::post('/student/courses/{id}/join', [StudentController::class, 'joinCourseWeb'])->name('student.courses.join');
     Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
 });
 
@@ -57,6 +59,11 @@ Route::middleware(['auth:student_web'])->group(function () {
 Route::middleware(['auth:instructor_web'])->group(function () {
     Route::get('/instructor/dashboard', [InstructorController::class, 'dashboardView'])->name('instructor.dashboard');
     Route::get('/instructor/courses', [InstructorController::class, 'myCoursesWeb'])->name('instructor.courses.index');
+    Route::get('/instructor/courses/create', [InstructorController::class, 'createCourseWeb'])->name('instructor.courses.create');
+    Route::post('/instructor/courses', [InstructorController::class, 'storeCourseWeb'])->name('instructor.courses.store');
+    Route::get('/instructor/courses/{id}/edit', [InstructorController::class, 'editCourseWeb'])->name('instructor.courses.edit');
+    Route::put('/instructor/courses/{id}', [InstructorController::class, 'updateCourseWeb'])->name('instructor.courses.update');
+    Route::delete('/instructor/courses/{id}', [InstructorController::class, 'destroyCourseWeb'])->name('instructor.courses.destroy');
     Route::get('/instructor/students', [InstructorController::class, 'myStudentsWeb'])->name('instructor.students.index');
     Route::post('/instructor/courses/{id}/status', [InstructorController::class, 'updateStudentStatusWeb'])->name('instructor.students.update-status');
 });

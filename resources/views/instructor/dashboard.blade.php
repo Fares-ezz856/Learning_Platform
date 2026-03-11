@@ -57,14 +57,23 @@
         </div>
 
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">My Student Registrations (Last 7 Days)</h3>
+              </div>
+              <div class="card-body">
+                <div class="chart">
+                  <canvas id="registrationChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                </div>
+              </div>
+            </div>
             <div class="card">
               <div class="card-header border-transparent">
                 <h3 class="card-title">My Courses Performance</h3>
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
+                   <a href="{{ route('instructor.courses.create') }}" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> Create New Course</a>
+                   <a href="{{ route('instructor.courses.index') }}" class="btn btn-sm btn-info">View All Courses</a>
                 </div>
               </div>
               <div class="card-body p-0">
@@ -82,7 +91,7 @@
                     <tbody>
                     @foreach($my_courses as $course)
                     <tr>
-                      <td><a href="#">#{{ $course->id }}</a></td>
+                      <td><a href="{{ route('instructor.courses.edit', $course->id) }}">#{{ $course->id }}</a></td>
                       <td>{{ $course->title }}</td>
                       <td><span class="badge badge-info">{{ $course->students_count }}</span></td>
                       <td>
@@ -95,7 +104,7 @@
                         @endif
                       </td>
                       <td>
-                        <a href="#" class="btn btn-sm btn-info"><i class="fas fa-edit"></i> Edit</a>
+                        <a href="{{ route('instructor.courses.edit', $course->id) }}" class="btn btn-sm btn-info" title="Edit Course"><i class="fas fa-edit"></i> Edit</a>
                       </td>
                     </tr>
                     @endforeach
@@ -104,9 +113,19 @@
                 </div>
                 @if($my_courses->isEmpty())
                 <div class="p-4 text-center">
-                  <p class="text-muted">You haven't created any courses yet. <a href="#">Create your first course</a></p>
+                  <p class="text-muted">You haven't created any courses yet. <a href="{{ route('instructor.courses.create') }}">Create your first course</a></p>
                 </div>
                 @endif
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Course Distribution</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="courseChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
               </div>
             </div>
           </div>
@@ -115,4 +134,61 @@
     </section>
     <!-- /.content -->
   </div>
+
+@push('scripts')
+<script>
+$(function () {
+  // Registration Chart (Line)
+  var regChartCanvas = $('#registrationChart').get(0).getContext('2d');
+  var regChartData = {
+    labels  : @json($registrationLabels),
+    datasets: [
+      {
+        label               : 'New Students Joined',
+        backgroundColor     : 'rgba(23, 162, 184, 0.5)',
+        borderColor         : 'rgba(23, 162, 184, 1)',
+        pointRadius          : false,
+        pointColor          : '#3b8bba',
+        pointStrokeColor    : 'rgba(60,141,188,1)',
+        pointHighlightFill  : '#fff',
+        pointHighlightStroke: 'rgba(60,141,188,1)',
+        data                : @json($registrationData)
+      }
+    ]
+  };
+
+  new Chart(regChartCanvas, {
+    type: 'line',
+    data: regChartData,
+    options: {
+      maintainAspectRatio : false,
+      responsive : true,
+      legend: { display: false },
+      scales: {
+        xAxes: [{ gridLines : { display : false } }],
+        yAxes: [{ gridLines : { display : false }, ticks: { beginAtZero: true, stepSize: 1 } }]
+      }
+    }
+  });
+
+  // Course Chart (Doughnut)
+  var courseChartCanvas = $('#courseChart').get(0).getContext('2d');
+  var courseData = {
+    labels: ['Approved', 'Pending', 'Rejected'],
+    datasets: [{
+      data: [{{ $courseDistribution['approved'] }}, {{ $courseDistribution['pending'] }}, {{ $courseDistribution['rejected'] }}],
+      backgroundColor : ['#28a745', '#ffc107', '#dc3545'],
+    }]
+  };
+  new Chart(courseChartCanvas, {
+    type: 'doughnut',
+    data: courseData,
+    options: {
+      maintainAspectRatio : false,
+      responsive : true,
+    }
+  });
+});
+</script>
+@endpush
 @endsection

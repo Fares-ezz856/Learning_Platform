@@ -41,63 +41,59 @@
 
           @if(Auth::guard('admin_web')->check())
           <li class="nav-item">
-            <a href="{{ route('admin.dashboard') }}" class="nav-link active">
+            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>Admin Dashboard</p>
             </a>
           </li>
           <li class="nav-header">MANAGEMENT</li>
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {{ request()->is('admin/courses*') ? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->is('admin/courses*') ? 'active' : '' }}">
               <i class="nav-icon fas fa-book"></i>
               <p>Courses <i class="fas fa-angle-left right"></i></p>
             </a>
             <ul class="nav nav-treeview">
-              <li class="nav-item"><a href="{{ route('admin.courses.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Courses</p></a></li>
-              <li class="nav-item"><a href="{{ route('admin.courses.pending') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Pending Courses</p></a></li>
+              <li class="nav-item"><a href="{{ route('admin.courses.index') }}" class="nav-link {{ request()->is('admin/courses') ? 'active' : '' }}"><i class="far fa-circle nav-icon"></i><p>All Courses</p></a></li>
+              <li class="nav-item"><a href="{{ route('admin.courses.pending') }}" class="nav-link {{ request()->is('admin/courses/pending') ? 'active' : '' }}"><i class="far fa-circle nav-icon"></i><p>Pending Courses</p></a></li>
             </ul>
           </li>
-          <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
+          <li class="nav-item has-treeview {{ request()->is('admin/instructors*') || request()->is('admin/students*') ? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->is('admin/instructors*') || request()->is('admin/students*') ? 'active' : '' }}">
               <i class="nav-icon fas fa-users"></i>
               <p>Users <i class="fas fa-angle-left right"></i></p>
             </a>
             <ul class="nav nav-treeview">
-              <li class="nav-item"><a href="{{ route('admin.instructors.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Instructors</p></a></li>
-              <li class="nav-item"><a href="{{ route('admin.students.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Students</p></a></li>
+              <li class="nav-item"><a href="{{ route('admin.instructors.index') }}" class="nav-link {{ request()->is('admin/instructors*') ? 'active' : '' }}"><i class="far fa-circle nav-icon"></i><p>Instructors</p></a></li>
+              <li class="nav-item"><a href="{{ route('admin.students.index') }}" class="nav-link {{ request()->is('admin/students*') ? 'active' : '' }}"><i class="far fa-circle nav-icon"></i><p>Students</p></a></li>
             </ul>
           </li>
-          @endif
-
-          @if(Auth::guard('instructor_web')->check())
+          @elseif(Auth::guard('instructor_web')->check())
           <li class="nav-item">
-            <a href="{{ route('instructor.dashboard') }}" class="nav-link active">
+            <a href="{{ route('instructor.dashboard') }}" class="nav-link {{ request()->is('instructor/dashboard') ? 'active' : '' }}">
               <i class="nav-icon fas fa-chalkboard-teacher"></i>
               <p>Instructor Dashboard</p>
             </a>
           </li>
           <li class="nav-header">MY CONTENT</li>
           <li class="nav-item">
-            <a href="{{ route('instructor.courses.index') }}" class="nav-link"><i class="nav-icon fas fa-book"></i><p>My Courses</p></a>
+            <a href="{{ route('instructor.courses.index') }}" class="nav-link {{ request()->is('instructor/courses*') ? 'active' : '' }}"><i class="nav-icon fas fa-book"></i><p>My Courses</p></a>
           </li>
           <li class="nav-item">
-            <a href="{{ route('instructor.students.index') }}" class="nav-link"><i class="nav-icon fas fa-users"></i><p>My Students</p></a>
+            <a href="{{ route('instructor.students.index') }}" class="nav-link {{ request()->is('instructor/students*') ? 'active' : '' }}"><i class="nav-icon fas fa-users"></i><p>My Students</p></a>
           </li>
-          @endif
-
-          @if(Auth::guard('student_web')->check())
+          @elseif(Auth::guard('student_web')->check())
           <li class="nav-item">
-            <a href="{{ route('student.dashboard') }}" class="nav-link active">
+            <a href="{{ route('student.dashboard') }}" class="nav-link {{ request()->is('student/dashboard') ? 'active' : '' }}">
               <i class="nav-icon fas fa-user-graduate"></i>
               <p>Student Dashboard</p>
             </a>
           </li>
           <li class="nav-header">LEARNING</li>
           <li class="nav-item">
-            <a href="{{ route('student.courses.index') }}" class="nav-link"><i class="nav-icon fas fa-layer-group"></i><p>My Courses</p></a>
+            <a href="{{ route('student.courses.index') }}" class="nav-link {{ request()->is('student/courses*') ? 'active' : '' }}"><i class="nav-icon fas fa-layer-group"></i><p>My Courses</p></a>
           </li>
           <li class="nav-item">
-            {{-- <a href="{{ route('welcome') }}" class="nav-link"><i class="nav-icon fas fa-search"></i><p>Browse All</p></a> --}}
+            <a href="{{ route('student.courses.browse') }}" class="nav-link {{ request()->is('student/browse-courses') ? 'active' : '' }}"><i class="nav-icon fas fa-search"></i><p>Browse All</p></a>
           </li>
           @endif
 
