@@ -177,4 +177,29 @@ class StudentController extends Controller
         
         return redirect()->route('student.courses.index')->with('success', 'Your request to join the course has been sent to the instructor.');
     }
+
+    public function profileViewWeb()
+    {
+        $student = auth('student_web')->user();
+        return view('student.profile', compact('student'));
+    }
+
+    public function profileUpdateWeb(Request $request)
+    {
+        $student = auth('student_web')->user();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:students,email,' . $student->id,
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        $student->name = $validated['name'];
+        $student->email = $validated['email'];
+        if ($request->filled('password')) {
+            $student->password = Hash::make($validated['password']);
+        }
+        $student->save();
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
 }

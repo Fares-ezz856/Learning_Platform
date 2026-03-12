@@ -35,6 +35,10 @@ Route::middleware(['auth:admin_web'])->group(function () {
 
     Route::get('/admin/students', [AdminController::class, 'allStudents'])->name('admin.students.index');
     Route::delete('/admin/students/{id}', [AdminController::class, 'deletestudentWeb'])->name('admin.students.delete');
+
+    // Admin Profile Routes
+    Route::get('/admin/profile', [AdminController::class, 'profileViewWeb'])->name('admin.profile');
+    Route::post('/admin/profile', [AdminController::class, 'profileUpdateWeb'])->name('admin.profile.update');
 });
 
 // Instructor Authentication (Web)
@@ -54,6 +58,10 @@ Route::middleware(['auth:student_web'])->group(function () {
     Route::get('/student/browse-courses', [StudentController::class, 'browseCoursesWeb'])->name('student.courses.browse');
     Route::post('/student/courses/{id}/join', [StudentController::class, 'joinCourseWeb'])->name('student.courses.join');
     Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
+
+    // Student Profile Routes
+    Route::get('/student/profile', [StudentController::class, 'profileViewWeb'])->name('student.profile');
+    Route::post('/student/profile', [StudentController::class, 'profileUpdateWeb'])->name('student.profile.update');
 });
 
 // Public Chat Routes
@@ -73,6 +81,10 @@ Route::middleware(['auth:instructor_web'])->group(function () {
     Route::delete('/instructor/courses/{id}', [InstructorController::class, 'destroyCourseWeb'])->name('instructor.courses.destroy');
     Route::get('/instructor/students', [InstructorController::class, 'myStudentsWeb'])->name('instructor.students.index');
     Route::post('/instructor/courses/{id}/status', [InstructorController::class, 'updateStudentStatusWeb'])->name('instructor.students.update-status');
+
+    // Instructor Profile Routes
+    Route::get('/instructor/profile', [InstructorController::class, 'profileViewWeb'])->name('instructor.profile');
+    Route::post('/instructor/profile', [InstructorController::class, 'profileUpdateWeb'])->name('instructor.profile.update');
 });
 
 Route::get('/gemini', [GeminiController::class, 'index'])->name('gemini.index');

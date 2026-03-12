@@ -107,7 +107,13 @@
 
           <li class="nav-header">ACCOUNT</li>
           <li class="nav-item">
-            <a href="#" class="nav-link">
+            @php
+              $profileRoute = '#';
+              if(Auth::guard('admin_web')->check()) $profileRoute = route('admin.profile');
+              elseif(Auth::guard('instructor_web')->check()) $profileRoute = route('instructor.profile');
+              elseif(Auth::guard('student_web')->check()) $profileRoute = route('student.profile');
+            @endphp
+            <a href="{{ $profileRoute }}" class="nav-link {{ request()->is('*/profile') ? 'active' : '' }}">
               <i class="nav-icon fas fa-user-cog"></i>
               <p>Profile</p>
             </a>

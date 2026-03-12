@@ -147,11 +147,11 @@ public function countcourse(){
              return redirect()->route('instructor.login');
         }
         $instructor_id = $instructor->id;
-        
+
         $course_count = Course::where('instructor_id', $instructor_id)->count();
         $student_count = Course::where('instructor_id', $instructor_id)->withCount('students')->get()->sum('students_count');
         $review_count = Review::where('instructor_id', $instructor_id)->count();
-        
+
         $my_courses = Course::where('instructor_id', $instructor_id)->withCount('students')->get();
 
         // Chart Data: Instructor's Student Registration Trends (Last 7 Days)
@@ -252,5 +252,32 @@ public function countcourse(){
         $course->delete();
 
         return redirect()->route('instructor.courses.index')->with('success', 'Course deleted successfully.');
+    }
+
+    public function profileViewWeb()
+    {
+        $instructor = auth('instructor_web')->user();
+        return view('instructor.profile', compact('instructor'));
+    }
+
+    public function profileUpdateWeb(Request $request)
+    {
+        $instructor = auth('instructor_web')->user();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:instructors,email,' . $instructor->id,
+            'bio' => 'nullable|string',
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        $instructor->name = $validated['name'];
+        $instructor->email = $validated['email'];
+        $instructor->bio = $validated['bio'];
+        if ($request->filled('password')) {
+            $instructor->password = Hash::make($validated['password']);
+        }
+        $instructor->save();
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 }

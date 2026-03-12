@@ -266,4 +266,29 @@ class AdminController extends Controller
         Instructor::create($validated);
         return $this->success('Instructor Added Successfully',201);
     }
+
+    public function profileViewWeb()
+    {
+        $admin = auth('admin_web')->user();
+        return view('admin.profile', compact('admin'));
+    }
+
+    public function profileUpdateWeb(Request $request)
+    {
+        $admin = auth('admin_web')->user();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:admins,email,' . $admin->id,
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        $admin->name = $validated['name'];
+        $admin->email = $validated['email'];
+        if ($request->filled('password')) {
+            $admin->password = Hash::make($validated['password']);
+        }
+        $admin->save();
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
 }

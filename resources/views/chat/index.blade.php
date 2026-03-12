@@ -34,12 +34,13 @@
                                     @php
                                         $currentUser = Auth::guard('admin_web')->user() ?? Auth::guard('instructor_web')->user() ?? Auth::guard('student_web')->user();
                                         $isMe = ($msg->sender_id == $currentUser->id && $msg->sender_type == get_class($currentUser));
-                                        
+
                                         $senderName = $msg->sender->name ?? 'Unknown';
                                         $role = 'User';
                                         if ($msg->sender_type == \App\Models\Admin::class) $role = 'Admin';
                                         elseif ($msg->sender_type == \App\Models\Instructor::class) $role = 'Instructor';
                                         elseif ($msg->sender_type == \App\Models\Student::class) $role = 'Student';
+
                                     @endphp
 
                                     <!-- Message. Default to the left -->
@@ -87,6 +88,19 @@
     document.addEventListener('DOMContentLoaded', function() {
         var chatBox = document.getElementById('chat-box');
         chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Simulated Real-time: Refresh every 10 seconds if user isn't typing
+        var typing = false;
+        document.querySelector('input[name="message"]').addEventListener('focus', () => typing = true);
+        document.querySelector('input[name="message"]').addEventListener('blur', () => typing = false);
+
+        setInterval(function() {
+            if (!typing) {
+                // We use AJAX to fetch just the new messages in a real app,
+                // but for this Blade-only request, a simple reload is the most reliable "real-time" simulation.
+                window.location.reload();
+            }
+        }, 10000);
     });
 </script>
 @endpush

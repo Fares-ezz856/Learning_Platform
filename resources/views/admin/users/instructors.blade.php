@@ -142,7 +142,7 @@
     document.getElementById('instructorSearch').addEventListener('keyup', function() {
         let filter = this.value.toUpperCase();
         let rows = document.querySelector("#instructorTable tbody").rows;
-        
+
         for (let i = 0; i < rows.length; i++) {
             let name = rows[i].cells[0].textContent.toUpperCase();
             let email = rows[i].cells[2].textContent.toUpperCase();
