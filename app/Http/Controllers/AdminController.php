@@ -8,6 +8,7 @@ use App\Http\Requests\AdminRequest;
 use App\Http\Requests\InstructorRequest;
 use App\Http\Requests\StudentRequest;
 use App\Models\Admin;
+use App\Models\Contact;
 use App\Models\Course;
 use App\Models\Instructor;
 use App\Models\Lesson;
@@ -146,7 +147,7 @@ class AdminController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $registrationLabels[] = $date->format('M d');
-            
+
             $registrationData[] = Student::whereDate('created_at', $date->toDateString())->count();
             $instructorData[] = Instructor::whereDate('created_at', $date->toDateString())->count();
             $enrollmentData[] = \DB::table('student_courses')->whereDate('created_at', $date->toDateString())->count();
@@ -158,9 +159,9 @@ class AdminController extends Controller
             'pending' => $pending_course,
             'rejected' => $rejected_course,
         ];
-        
+
         return view('admin.dashboard', compact(
-            'instructor', 'student', 'course', 'pending_course', 'approved_course', 
+            'instructor', 'student', 'course', 'pending_course', 'approved_course',
             'registrationData', 'registrationLabels', 'courseDistribution',
             'instructorData', 'enrollmentData'
         ));
@@ -290,5 +291,10 @@ class AdminController extends Controller
         $admin->save();
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
+
+    public function getcontacts(){
+        $contacts=Contact::all();
+        return view('admin.contacts',compact('contacts'));
     }
 }

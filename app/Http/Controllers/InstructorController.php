@@ -7,6 +7,7 @@ use App\Http\Requests\InstructorRequest;
 use App\Http\Resources\ApprovedCourseResource;
 use App\Http\Resources\ReviewResource;
 use App\Http\Resources\StudentResource;
+use App\Models\Contact;
 use App\Models\Course;
 use App\Models\Instructor;
 use App\Models\Lesson;
@@ -439,6 +440,11 @@ public function countcourse(){
             return redirect()->back()->with('error', 'Failed to create lesson: ' . $e->getMessage());
         }
 
+    }
+
+    public function getcontacts(){
+        $contacts=Contact::all();
+        return view('instructor.contacts',compact('contacts'));
     }
 
 }

@@ -6,6 +6,8 @@ use App\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReviewRequest;
 use App\Http\Requests\StudentRequest;
+use App\Mail\ContactMail;
+use App\Models\Contact;
 use Gemini\Laravel\Facades\Gemini;
 
 use App\Models\Review;
@@ -18,6 +20,7 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class StudentController extends Controller
@@ -129,7 +132,7 @@ class StudentController extends Controller
         foreach ($approved_courses as $course) {
             $lesson_count += $course->lessons()->count();
         }
-        
+
         $enrolled_courses = $student->courses()->with('instructor')->get();
 
         $lessons = collect();
@@ -166,20 +169,20 @@ class StudentController extends Controller
     {
         $student = auth('student_web')->user();
         $joinedCourseIds = $student->courses()->pluck('courses.id')->toArray();
-        
+
         $courses = Course::where('status', 'approved')
             ->whereNotIn('id', $joinedCourseIds)
             ->with('instructor')
             ->withCount('students')
             ->get();
-            
+
         return view('student.courses.browse', compact('courses'));
     }
 
     public function joinCourseWeb($id)
     {
         $student = auth('student_web')->user();
-        
+
         if ($student->courses()->where('course_id', $id)->exists()) {
             return redirect()->back()->with('info', 'You have already requested to join this course.');
         }
@@ -193,7 +196,7 @@ class StudentController extends Controller
 
         // Free course: enroll directly
         $student->courses()->attach($id, ['status' => 'pending']);
-        
+
         return redirect()->route('student.courses.index')->with('success', 'Your request to join the course has been sent to the instructor.');
     }
 
@@ -313,5 +316,18 @@ class StudentController extends Controller
                 'answer' => 'Sorry, I could not process your request. Please try again later. (Error: ' . $e->getMessage() . ')',
             ], 500);
         }
+    }
+   
+
+    public function contact(Request $request){
+       $validated= $request->validate([
+            'name'=>'required|string',
+            'email'=>'required|email',
+            'phone'=>'nullable',
+            'message'=>'required|string'
+        ]);
+        Contact::create($validated);
+        Mail::to($request->email)->send(new ContactMail() );
+        return redirect()->back()->with('success','Your Message Sent Successfully');
     }
 }

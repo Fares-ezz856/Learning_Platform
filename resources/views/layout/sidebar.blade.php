@@ -114,6 +114,21 @@
               <p>Public Chat</p>
             </a>
           </li>
+          @if(Auth::guard('admin_web')->check())
+          <li class="nav-item">
+            <a href="{{ route('admin.contacts.index') }}" class="nav-link {{ request()->is('admin/contacts*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-envelope"></i>
+              <p>Contact Messages</p>
+            </a>
+          </li>
+          @elseif(Auth::guard('instructor_web')->check())
+          <li class="nav-item">
+            <a href="{{ route('instructor.contacts.index') }}" class="nav-link {{ request()->is('instructor/contacts*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-envelope"></i>
+              <p>Contact Messages</p>
+            </a>
+          </li>
+          @endif
 
           <li class="nav-header">ACCOUNT</li>
           <li class="nav-item">

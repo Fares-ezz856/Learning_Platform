@@ -185,6 +185,70 @@
             </div>
           </div>
         </div>
+        {{-- Contact Form --}}
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-envelope mr-2"></i>Contact Us</h3>
+              </div>
+              <form action="{{ route('contact') }}" method="POST">
+                @csrf
+                <div class="card-body">
+                  @if(session('success'))
+                    <div class="alert alert-success alert-dismissible">
+                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                      <h5><i class="icon fas fa-check"></i> Success!</h5>
+                      {{ session('success') }}
+                    </div>
+                  @endif
+
+                  <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" name="name" class="form-control" id="name" value="{{ $student->name }}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email" name="email" class="form-control" id="email" value="{{ $student->email }}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="phone">Phone (Optional)</label>
+                    <input type="text" name="phone" class="form-control" id="phone" placeholder="Enter phone number">
+                  </div>
+                  <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea name="message" class="form-control" id="message" rows="4" placeholder="How can we help you?" required></textarea>
+                  </div>
+                </div>
+                <div class="card-footer text-right">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane mr-1"></i> Send Message
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          {{-- Quick Support Info --}}
+          <div class="col-md-6">
+            <div class="card card-info card-outline">
+              <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Quick Support</h3>
+              </div>
+              <div class="card-body">
+                <p>Have questions about your courses, payments, or the platform? Our support team is here to help you.</p>
+                <ul class="list-unstyled">
+                  <li class="mb-2"><i class="fas fa-clock mr-2 text-info"></i> Response time: Within 24 hours</li>
+                  <li class="mb-2"><i class="fas fa-headset mr-2 text-info"></i> Available: Mon - Fri (9 AM - 6 PM)</li>
+                </ul>
+                <div class="alert alert-light border">
+                  <small class="text-muted">For immediate automated assistance, you can also use our <strong>AI Study Assistant</strong> powered by Gemini just below this section!</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {{-- AI Study Assistant --}}
         <div class="row mt-4">
           <div class="col-12">

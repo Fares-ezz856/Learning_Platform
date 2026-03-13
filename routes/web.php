@@ -1,14 +1,13 @@
 <?php
 
-use App\Http\Controllers\GeminiController;
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\GeminiController;
 use App\Http\Controllers\InstructorController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserAuthController;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\ChatController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -36,9 +35,10 @@ Route::middleware(['auth:admin_web'])->group(function () {
     Route::get('/admin/students', [AdminController::class, 'allStudents'])->name('admin.students.index');
     Route::delete('/admin/students/{id}', [AdminController::class, 'deletestudentWeb'])->name('admin.students.delete');
 
-    // Admin Profile Routes
     Route::get('/admin/profile', [AdminController::class, 'profileViewWeb'])->name('admin.profile');
     Route::post('/admin/profile', [AdminController::class, 'profileUpdateWeb'])->name('admin.profile.update');
+
+    Route::get('/admin/contacts',[AdminController::class,'getcontacts'])->name('admin.contacts.index');
 });
 
 // Instructor Authentication (Web)
@@ -58,6 +58,9 @@ Route::middleware(['auth:student_web'])->group(function () {
     Route::get('/student/browse-courses', [StudentController::class, 'browseCoursesWeb'])->name('student.courses.browse');
     Route::post('/student/courses/{id}/join', [StudentController::class, 'joinCourseWeb'])->name('student.courses.join');
     Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
+
+    Route::post('/student/contact', [StudentController::class, 'contact'])->name('contact');
+    // Route::post('/student/contact/create',[StudentController::class,'createcontact'])->name('createcontact');
 
     // Student Profile Routes
     Route::get('/student/profile', [StudentController::class, 'profileViewWeb'])->name('student.profile');
@@ -95,8 +98,9 @@ Route::middleware(['auth:instructor_web'])->group(function () {
     Route::put('/instructor/lessons/{id}', [InstructorController::class, 'updateLessonWeb'])->name('instructor.lessons.update');
     Route::delete('/instructor/lessons/{id}', [InstructorController::class, 'destroyLessonWeb'])->name('instructor.lessons.destroy');
 
-
     Route::post('/instructor/courses/{id}/status', [InstructorController::class, 'updateStudentStatusWeb'])->name('instructor.students.update-status');
+
+     Route::get('/instructor/contacts',[InstructorController::class,'getcontacts'])->name('instructor.contacts.index');
 
     // Instructor Profile Routes
     Route::get('/instructor/profile', [InstructorController::class, 'profileViewWeb'])->name('instructor.profile');
