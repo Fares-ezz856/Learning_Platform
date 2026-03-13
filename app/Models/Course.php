@@ -11,9 +11,15 @@ class Course extends Model
     return $this->belongsTo(Instructor::class);
    }
    public function students(){
-    return $this->belongsToMany(Student::class,'student_courses');
+    return $this->belongsToMany(Student::class,'student_courses')->withPivot('status')->withTimestamps();
    }
    public function lessons(){
     return $this->hasMany(Lesson::class);
+   }
+   public function payments(){
+    return $this->hasMany(Payment::class);
+   }
+   public function isFree(){
+    return $this->price <= 0;
    }
 }

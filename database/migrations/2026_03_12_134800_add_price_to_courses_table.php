@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('student_courses', function (Blueprint $table) {
-           $table->enum('status',['pending','approved','rejected'])->default('pending');
+        Schema::table('courses', function (Blueprint $table) {
+            $table->decimal('price', 8, 2)->default(0.00)->after('description');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('student_courses', function (Blueprint $table) {
-            //
+        Schema::table('courses', function (Blueprint $table) {
+            $table->dropColumn('price');
         });
     }
 };

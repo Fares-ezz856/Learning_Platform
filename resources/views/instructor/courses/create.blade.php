@@ -46,6 +46,14 @@
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
+                                <div class="form-group">
+                                    <label for="price">Course Price ($)</label>
+                                    <input type="number" name="price" id="price" class="form-control @error('price') is-invalid @enderror" placeholder="0.00 for free course" value="{{ old('price', '0.00') }}" step="0.01" min="0" required>
+                                    <small class="form-text text-muted">Set to 0 for a free course.</small>
+                                    @error('price')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                             <div class="card-footer text-right">
                                 <a href="{{ route('instructor.courses.index') }}" class="btn btn-default">Cancel</a>

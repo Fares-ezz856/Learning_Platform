@@ -27,6 +27,14 @@
                             <p class="text-muted small">By {{ $course->instructor->name }}</p>
                             <p>{{ Str::limit($course->description, 100) }}</p>
                             
+                            <div class="mb-2">
+                                @if($course->isFree())
+                                    <span class="badge badge-success">FREE</span>
+                                @else
+                                    <span class="badge badge-warning">Paid: ${{ number_format($course->price, 2) }}</span>
+                                @endif
+                            </div>
+
                             <div class="progress mb-3" style="height: 5px;">
                                 <div class="progress-bar bg-purple" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>

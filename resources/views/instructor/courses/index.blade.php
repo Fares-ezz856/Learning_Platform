@@ -69,7 +69,7 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" title="Delete Course"><i class="fas fa-trash"></i></button>
                                         </form>
-                                        <a href="#" class="btn btn-sm btn-warning" title="Manage Lessons"><i class="fas fa-list"></i></a>
+                                        <a href="{{ route('instructor.course.lessons.index', $course->id) }}" class="btn btn-sm btn-warning" title="Manage Lessons"><i class="fas fa-list"></i></a>
                                     </div>
                                 </td>
                             </tr>

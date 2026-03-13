@@ -35,6 +35,13 @@
                     <div class="card card-outline card-primary h-100">
                         <div class="card-header">
                             <h3 class="card-title">{{ $course->title }}</h3>
+                            <div class="card-tools">
+                                @if($course->isFree())
+                                    <span class="badge badge-success">FREE</span>
+                                @else
+                                    <span class="badge badge-warning">${{ number_format($course->price, 2) }}</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="card-body">
                             <p class="text-muted">{{ Str::limit($course->description, 150) }}</p>
@@ -49,7 +56,15 @@
                         <div class="card-footer">
                             <form action="{{ route('student.courses.join', $course->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-primary btn-block">Join Course</button>
+                                @if($course->isFree())
+                                    <button type="submit" class="btn btn-success btn-block">
+                                        <i class="fas fa-plus-circle mr-1"></i> Join Free
+                                    </button>
+                                @else
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Enroll Now - ${{ number_format($course->price, 2) }}
+                                    </button>
+                                @endif
                             </form>
                         </div>
                     </div>

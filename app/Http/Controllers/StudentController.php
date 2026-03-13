@@ -6,14 +6,19 @@ use App\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReviewRequest;
 use App\Http\Requests\StudentRequest;
+use Gemini\Laravel\Facades\Gemini;
 
 use App\Models\Review;
 use App\Models\Student;
 use App\Models\Course;
 use App\Models\Instructor;
 
+use App\Models\Payment;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -127,6 +132,12 @@ class StudentController extends Controller
         
         $enrolled_courses = $student->courses()->with('instructor')->get();
 
+        $lessons = collect();
+        foreach ($approved_courses as $course) {
+            $lessons = $lessons->merge($course->lessons()->with('course')->get());
+        }
+        $lessons = $lessons->sortByDesc('created_at')->take(10); // Show most recent 10 lessons
+
         // Chart Data: Enrollment Type Distribution
         $statusDistribution = [
             'approved' => $student->courses()->wherePivot('status', 'approved')->count(),
@@ -134,7 +145,7 @@ class StudentController extends Controller
             'rejected' => $student->courses()->wherePivot('status', 'rejected')->count(),
         ];
 
-        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses', 'statusDistribution'));
+        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses', 'statusDistribution', 'lessons'));
     }
 
     public function myCoursesWeb()
@@ -173,9 +184,76 @@ class StudentController extends Controller
             return redirect()->back()->with('info', 'You have already requested to join this course.');
         }
 
+        $course = Course::findOrFail($id);
+
+        // If the course is paid, redirect to payment checkout
+        if (!$course->isFree()) {
+            return redirect()->route('student.payment.checkout', $id);
+        }
+
+        // Free course: enroll directly
         $student->courses()->attach($id, ['status' => 'pending']);
         
         return redirect()->route('student.courses.index')->with('success', 'Your request to join the course has been sent to the instructor.');
+    }
+
+    public function paymentCheckoutWeb($id)
+    {
+        $student = auth('student_web')->user();
+        $course = Course::with('instructor')->findOrFail($id);
+
+        // Prevent double enrollment
+        if ($student->courses()->where('course_id', $id)->exists()) {
+            return redirect()->route('student.courses.index')->with('info', 'You are already enrolled in this course.');
+        }
+
+        // Free courses don't need payment
+        if ($course->isFree()) {
+            return redirect()->route('student.courses.join', $id);
+        }
+
+        return view('student.payment.checkout', compact('course'));
+    }
+
+    public function processPaymentWeb(Request $request, $id)
+    {
+        $student = auth('student_web')->user();
+        $course = Course::findOrFail($id);
+
+        // Prevent double enrollment
+        if ($student->courses()->where('course_id', $id)->exists()) {
+            return redirect()->route('student.courses.index')->with('info', 'You are already enrolled in this course.');
+        }
+
+        $request->validate([
+            'payment_method' => 'required|in:credit_card,paypal,bank_transfer',
+            'cardholder_name' => 'required_if:payment_method,credit_card|string|max:255',
+            'card_number' => 'required_if:payment_method,credit_card|string|max:19',
+            'expiry' => 'required_if:payment_method,credit_card|string|max:5',
+            'cvv' => 'required_if:payment_method,credit_card|string|max:4',
+        ]);
+
+        // Create payment record (simulated – always succeeds)
+        $payment = Payment::create([
+            'student_id' => $student->id,
+            'course_id' => $course->id,
+            'amount' => $course->price,
+            'payment_method' => $request->payment_method,
+            'transaction_id' => 'TXN-' . strtoupper(Str::random(12)),
+            'status' => 'completed',
+        ]);
+
+        // Enroll student in course
+        $student->courses()->attach($course->id, ['status' => 'pending']);
+
+        return redirect()->route('student.courses.index')->with('success', 'Payment of $' . number_format($course->price, 2) . ' completed successfully! Your enrollment is pending instructor approval.');
+    }
+
+    public function paymentHistoryWeb()
+    {
+        $student = auth('student_web')->user();
+        $payments = $student->payments()->with('course')->latest()->get();
+        return view('student.payment.history', compact('payments'));
     }
 
     public function profileViewWeb()
@@ -199,7 +277,41 @@ class StudentController extends Controller
             $student->password = Hash::make($validated['password']);
         }
         $student->save();
-
         return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
+
+    public function askAI(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string|max:2000',
+        ]);
+
+        $student = auth('student_web')->user();
+        $courseNames = $student->courses()->wherePivot('status', 'approved')->pluck('title')->implode(', ');
+
+        $systemContext = "You are a helpful AI study assistant for a student named {$student->name} on an educational platform. ";
+        if ($courseNames) {
+            $systemContext .= "The student is currently enrolled in these courses: {$courseNames}. ";
+        }
+        $systemContext .= "Help them with their studies, answer questions about their courses, explain concepts, suggest study tips, and motivate them. Keep answers concise and helpful. Respond in the same language the student uses.";
+
+        $fullPrompt = $systemContext . "\n\nStudent's question: " . $request->prompt;
+
+        try {
+            $result = Gemini::generativeModel('gemini-2.0-flash')->generateContent($fullPrompt);
+            return response()->json([
+                'success' => true,
+                'answer' => $result->text(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Gemini AI Error in Student Assistant: ' . $e->getMessage(), [
+                'exception' => $e,
+                'student_id' => $student->id
+            ]);
+            return response()->json([
+                'success' => false,
+                'answer' => 'Sorry, I could not process your request. Please try again later. (Error: ' . $e->getMessage() . ')',
+            ], 500);
+        }
     }
 }

@@ -43,6 +43,7 @@
                                         <th>ID</th>
                                         <th>Title</th>
                                         <th>Instructor</th>
+                                        <th>Price</th>
                                         <th>Status</th>
                                         <th>Description</th>
                                         <th>Actions</th>
@@ -54,6 +55,13 @@
                                         <td>{{ $course->id }}</td>
                                         <td>{{ $course->title }}</td>
                                         <td>{{ $course->instructor ? $course->instructor->name : 'N/A' }}</td>
+                                        <td>
+                                            @if($course->price <= 0)
+                                                <span class="badge badge-success">Free</span>
+                                            @else
+                                                <span class="font-weight-bold">${{ number_format($course->price, 2) }}</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($course->status == 'approved')
                                                 <span class="badge badge-success">Approved</span>

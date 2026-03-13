@@ -62,6 +62,14 @@ Route::middleware(['auth:student_web'])->group(function () {
     // Student Profile Routes
     Route::get('/student/profile', [StudentController::class, 'profileViewWeb'])->name('student.profile');
     Route::post('/student/profile', [StudentController::class, 'profileUpdateWeb'])->name('student.profile.update');
+
+    // Student Payment Routes
+    Route::get('/student/payment/{id}/checkout', [StudentController::class, 'paymentCheckoutWeb'])->name('student.payment.checkout');
+    Route::post('/student/payment/{id}/process', [StudentController::class, 'processPaymentWeb'])->name('student.payment.process');
+    Route::get('/student/payments', [StudentController::class, 'paymentHistoryWeb'])->name('student.payments');
+
+    // Student AI Assistant Route
+    Route::post('/student/ask-ai', [StudentController::class, 'askAI'])->name('student.ask-ai');
 });
 
 // Public Chat Routes
@@ -80,6 +88,14 @@ Route::middleware(['auth:instructor_web'])->group(function () {
     Route::put('/instructor/courses/{id}', [InstructorController::class, 'updateCourseWeb'])->name('instructor.courses.update');
     Route::delete('/instructor/courses/{id}', [InstructorController::class, 'destroyCourseWeb'])->name('instructor.courses.destroy');
     Route::get('/instructor/students', [InstructorController::class, 'myStudentsWeb'])->name('instructor.students.index');
+    Route::get('/instructor/lessons', [InstructorController::class, 'myLessonsWeb'])->name('instructor.lessons.index');
+    Route::get('/instructor/lessons/create', [InstructorController::class, 'index'])->name('instructor.lessons.create');
+    Route::post('/instructor/createlessons', [InstructorController::class, 'create'])->name('instructor.createlessons');
+    Route::get('/instructor/lessons/{id}/edit', [InstructorController::class, 'editLessonWeb'])->name('instructor.lessons.edit');
+    Route::put('/instructor/lessons/{id}', [InstructorController::class, 'updateLessonWeb'])->name('instructor.lessons.update');
+    Route::delete('/instructor/lessons/{id}', [InstructorController::class, 'destroyLessonWeb'])->name('instructor.lessons.destroy');
+
+
     Route::post('/instructor/courses/{id}/status', [InstructorController::class, 'updateStudentStatusWeb'])->name('instructor.students.update-status');
 
     // Instructor Profile Routes

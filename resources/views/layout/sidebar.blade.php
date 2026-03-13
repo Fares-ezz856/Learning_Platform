@@ -79,6 +79,13 @@
             <a href="{{ route('instructor.courses.index') }}" class="nav-link {{ request()->is('instructor/courses*') ? 'active' : '' }}"><i class="nav-icon fas fa-book"></i><p>My Courses</p></a>
           </li>
           <li class="nav-item">
+            <a href="{{ route('instructor.lessons.index') }}" class="nav-link {{ request()->is('instructor/lessons') ? 'active' : '' }}"><i class="nav-icon fas fa-list"></i><p>All Lessons</p></a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('instructor.lessons.create') }}" class="nav-link {{ request()->is('instructor/lessons/create') ? 'active' : '' }}"><i class="nav-icon fas fa-plus-circle"></i><p>Add Lesson</p></a>
+          </li>
+
+          <li class="nav-item">
             <a href="{{ route('instructor.students.index') }}" class="nav-link {{ request()->is('instructor/students*') ? 'active' : '' }}"><i class="nav-icon fas fa-users"></i><p>My Students</p></a>
           </li>
           @elseif(Auth::guard('student_web')->check())
@@ -94,6 +101,9 @@
           </li>
           <li class="nav-item">
             <a href="{{ route('student.courses.browse') }}" class="nav-link {{ request()->is('student/browse-courses') ? 'active' : '' }}"><i class="nav-icon fas fa-search"></i><p>Browse All</p></a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ route('student.payments') }}" class="nav-link {{ request()->is('student/payments') ? 'active' : '' }}"><i class="nav-icon fas fa-credit-card"></i><p>My Payments</p></a>
           </li>
           @endif
 

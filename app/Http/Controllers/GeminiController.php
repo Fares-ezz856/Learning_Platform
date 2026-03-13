@@ -22,7 +22,7 @@ public function ask(Request $request)
 
   try {
     // استخدمي هذه الطريقة المباشرة
-    $result = Gemini::model('models/gemini-1.5-flash')->generateContent($request->prompt);
+    $result = Gemini::generativeModel('gemini-2.0-flash')->generateContent($request->prompt);
 
     return back()->with([
         'question' => $request->prompt,

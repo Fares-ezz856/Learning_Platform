@@ -13,6 +13,9 @@ use App\Models\Lesson;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
 
 class InstructorController extends Controller
 {
@@ -20,8 +23,8 @@ class InstructorController extends Controller
     public function register(InstructorRequest $request)
     {
         $validated = $request->validated();
-        $admin     = Instructor::create($validated);
-        $token     = $admin->createToken('Instructor-Token')->plainTextToken;
+        $instructor     = Instructor::create($validated);
+        $token     = $instructor->createToken('Instructor-Token')->plainTextToken;
         return $this->success('Registered Successfully', 201, $token);
     }
     public function login(Request $request)
@@ -216,6 +219,7 @@ public function countcourse(){
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $validated['instructor_id'] = auth('instructor_web')->id();
@@ -239,6 +243,7 @@ public function countcourse(){
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $course->update($validated);
@@ -280,4 +285,161 @@ public function countcourse(){
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
+    public function myLessonsWeb()
+    {
+        $instructor = auth('instructor_web')->user();
+        $lessons = Lesson::whereHas('course', function($query) use ($instructor) {
+            $query->where('instructor_id', $instructor->id);
+        })->with('course')->get();
+        $courses = Course::where('instructor_id', $instructor->id)->get();
+        return view('instructor.lessons.all', compact('lessons', 'courses'));
+    }
+
+    // public function courseLessonsIndexWeb($courseId)
+    // {
+    //     $instructor = auth('instructor_web')->user();
+    //     $course = Course::where('instructor_id', $instructor->id)->with('lessons')->findOrFail($courseId);
+    //     return view('instructor.lessons.index', compact('course'));
+    // }
+
+    // public function createLessonWeb($courseId)
+    // {
+    //     $instructor = auth('instructor_web')->user();
+    //     $course = Course::where('instructor_id', $instructor->id)->findOrFail($courseId);
+    //     return view('instructor.lessons.create', compact('course'));
+    // }
+
+    // public function storeLessonWeb(Request $request, $courseId)
+    // {
+    //     $instructor = auth('instructor_web')->user();
+    //     $course = Course::where('instructor_id', $instructor->id)->findOrFail($courseId);
+
+    //     $validated = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'content_type' => 'required|in:video,pdf,image,article',
+    //         'content_data' => 'required', // Needs better validation based on type
+    //         'order' => 'required|integer|min:1',
+    //     ]);
+
+    //     if ($request->hasFile('content_data')) {
+    //         $path = $request->file('content_data')->store('lessons', 'public');
+    //         $validated['content_data'] = $path;
+    //     }
+
+    //     $course->lessons()->create($validated);
+
+    //     return redirect()->route('instructor.course.lessons.index', $courseId)->with('success', 'Lesson created successfully.');
+    // }
+
+    public function editLessonWeb($id)
+    {
+        $instructor = auth('instructor_web')->user();
+        $lesson = Lesson::whereHas('course', function($query) use ($instructor) {
+            $query->where('instructor_id', $instructor->id);
+        })->findOrFail($id);
+        $courses = Course::where('instructor_id', $instructor->id)->get();
+
+        return view('instructor.lessons.edit', compact('lesson', 'courses'));
+    }
+
+    public function updateLessonWeb(Request $request, $id)
+    {
+        $instructor = auth('instructor_web')->user();
+        $lesson = Lesson::whereHas('course', function($query) use ($instructor) {
+            $query->where('instructor_id', $instructor->id);
+        })->findOrFail($id);
+
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'title' => 'required|string|max:255',
+            'content_type' => 'required|in:video,pdf,image,article',
+            'content_data' => 'nullable',
+            'order' => 'required|integer|min:1',
+        ]);
+
+        // Specific validation for files if provided
+        if ($request->get('content_type') !== 'article' && $request->hasFile('content_data')) {
+            $request->validate([
+                'content_data' => 'file|max:50000',
+            ]);
+        }
+
+        // Verify the new course belongs to the instructor
+        Course::where('instructor_id', $instructor->id)->findOrFail($validated['course_id']);
+
+        if ($request->hasFile('content_data')) {
+            $path = $request->file('content_data')->store('lessons', 'public');
+            $validated['content_data'] = $path;
+        }
+
+        $lesson->update(array_filter($validated));
+
+        return redirect()->route('instructor.lessons.index')->with('success', 'Lesson updated successfully.');
+    }
+
+    public function destroyLessonWeb($id)
+    {
+        $instructor = auth('instructor_web')->user();
+        $lesson = Lesson::whereHas('course', function($query) use ($instructor) {
+            $query->where('instructor_id', $instructor->id);
+        })->findOrFail($id);
+
+        $lesson->delete();
+
+        return redirect()->route('instructor.lessons.index')->with('success', 'Lesson deleted successfully.');
+    }
+
+
+    public function index(){
+        $instructor=auth('instructor_web')->user();
+        $courses=Course::where('instructor_id',$instructor->id)->get();
+        return view('instructor.lessons.create',compact('courses'));
+    }
+
+    public function create(Request $request)
+    {
+        $instructor = auth('instructor_web')->user();
+
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'title' => 'required|string|max:255',
+            'content_type' => 'required|in:video,pdf,image,article',
+            'content_data' => 'required_if:content_type,article|nullable',
+            'order' => 'required|integer|min:1',
+        ]);
+
+        // Specific validation for files
+        if ($request->get('content_type') !== 'article') {
+            $request->validate([
+                'content_data' => 'required|file|max:50000', // 50MB max
+            ]);
+        }
+
+        // Verify the course belongs to the instructor
+        $course = Course::where('instructor_id', $instructor->id)->findOrFail($validated['course_id']);
+
+        DB::beginTransaction();
+
+        try {
+            if ($request->hasFile('content_data')) {
+                $path = $request->file('content_data')->store('lessons', 'public');
+                $validated['content_data'] = $path;
+            }
+
+            Lesson::create($validated);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Lesson created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+           
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            return redirect()->back()->with('error', 'Failed to create lesson: ' . $e->getMessage());
+        }
+
+    }
+
 }
+

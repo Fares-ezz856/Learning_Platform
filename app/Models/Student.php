@@ -14,7 +14,7 @@ class Student extends Authenticatable
   protected $hidden = ['password', 'remember_token'];
 
   public function courses(){
-    return $this->belongsToMany(Course::class,'student_courses');
+    return $this->belongsToMany(Course::class,'student_courses')->withPivot('status')->withTimestamps();
   }
   public function reviews(){
     return $this->hasMany(Review::class);
@@ -25,6 +25,9 @@ class Student extends Authenticatable
 
             'password' => 'hashed',
         ];
+    }
+    public function payments(){
+        return $this->hasMany(Payment::class);
     }
     public function messages() {
     return $this->morphMany(Message::class, 'sender');

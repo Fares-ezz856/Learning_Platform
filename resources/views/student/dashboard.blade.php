@@ -57,7 +57,7 @@
         </div>
 
         <div class="row">
-          <div class="col-md-8">
+          <div class="col-md-7">
             <div class="card">
               <div class="card-header border-transparent">
                 <h3 class="card-title">My Recent Courses</h3>
@@ -70,7 +70,6 @@
                   <table class="table m-0">
                     <thead>
                     <tr>
-                      <th>Course ID</th>
                       <th>Title</th>
                       <th>Instructor</th>
                       <th>Status</th>
@@ -80,7 +79,6 @@
                     <tbody>
                     @foreach($enrolled_courses as $course)
                     <tr>
-                      <td>#{{ $course->id }}</td>
                       <td>{{ $course->title }}</td>
                       <td>{{ $course->instructor->name }}</td>
                       <td>
@@ -112,17 +110,137 @@
               </div>
             </div>
           </div>
-          <div class="col-md-4">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Enrollment Status</h3>
+          <div class="col-md-5">
+             <div class="card">
+              <div class="card-header border-transparent">
+                <h3 class="card-title">Available Lessons</h3>
+                <div class="card-tools">
+                   <span class="badge badge-info">{{ $lessons->count() }} Recent</span>
+                </div>
               </div>
-              <div class="card-body">
-                <canvas id="statusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+              <div class="card-body p-0">
+                <ul class="products-list product-list-in-card pl-2 pr-2">
+                  @foreach($lessons as $lesson)
+                  <li class="item">
+                    <div class="product-img">
+                      <span class="badge bg-primary p-2">
+                        @if($lesson->content_type == 'video')
+                          <i class="fas fa-play"></i>
+                        @elseif($lesson->content_type == 'pdf')
+                          <i class="fas fa-file-pdf"></i>
+                        @else
+                          <i class="fas fa-file-alt"></i>
+                        @endif
+                      </span>
+                    </div>
+                    <div class="product-info">
+                      <a href="{{ route('student.courses.lessons', $lesson->course_id) }}" class="product-title">{{ $lesson->title }}
+                        <span class="badge badge-success float-right">View</span></a>
+                      <span class="product-description">
+                        Course: {{ $lesson->course->title }}
+                      </span>
+                    </div>
+                  </li>
+                  @endforeach
+                </ul>
+                @if($lessons->isEmpty())
+                <div class="p-4 text-center text-muted">
+                  <p>No lessons available yet. Join courses to see lessons!</p>
+                </div>
+                @endif
               </div>
             </div>
           </div>
         </div>
+        <div class="row">
+           <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Enrollment Status Overview</h3>
+                 <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                     <p class="text-center">
+                      <strong>Course Status Distribution</strong>
+                    </p>
+                    <div class="chart-responsive">
+                      <canvas id="statusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <ul class="chart-legend clearfix">
+                      <li><i class="far fa-circle text-success"></i> Approved</li>
+                      <li><i class="far fa-circle text-warning"></i> Pending</li>
+                      <li><i class="far fa-circle text-danger"></i> Rejected</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{-- AI Study Assistant --}}
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card card-outline card-info collapsed-card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-robot mr-2"></i>AI Study Assistant
+                  <small class="text-muted ml-2">Powered by Gemini</small>
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body" style="display: none;">
+                {{-- Chat Messages Area --}}
+                <div id="ai-chat-messages" style="height: 350px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; background: #f4f6f9; margin-bottom: 15px;">
+                  <div class="ai-message">
+                    <div class="d-flex align-items-start mb-3">
+                      <div class="mr-2">
+                        <span class="badge badge-info p-2"><i class="fas fa-robot"></i></span>
+                      </div>
+                      <div class="bg-white p-3 rounded shadow-sm" style="max-width: 85%;">
+                        <p class="mb-0">Hello <strong>{{ $student->name }}</strong>! 👋 I'm your AI study assistant. Ask me anything about your courses, study tips, or any concept you need help with!</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Quick Suggestions --}}
+                <div class="mb-3" id="ai-suggestions">
+                  <small class="text-muted d-block mb-2">Quick questions:</small>
+                  <button class="btn btn-sm btn-outline-info mr-1 mb-1 ai-suggestion" data-prompt="Give me study tips for my courses">📚 Study Tips</button>
+                  <button class="btn btn-sm btn-outline-info mr-1 mb-1 ai-suggestion" data-prompt="Create a study plan for this week">📅 Study Plan</button>
+                  <button class="btn btn-sm btn-outline-info mr-1 mb-1 ai-suggestion" data-prompt="Explain a key concept from my courses in simple terms">💡 Explain a Concept</button>
+                  <button class="btn btn-sm btn-outline-info mr-1 mb-1 ai-suggestion" data-prompt="How can I stay motivated while studying?">🎯 Stay Motivated</button>
+                </div>
+
+                {{-- Input Area --}}
+                <form id="ai-chat-form">
+                  @csrf
+                  <div class="input-group">
+                    <input type="text" id="ai-prompt" class="form-control" placeholder="Ask me anything about your studies..." maxlength="2000" autocomplete="off">
+                    <div class="input-group-append">
+                      <button type="submit" class="btn btn-info" id="ai-send-btn">
+                        <i class="fas fa-paper-plane"></i> Ask
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div><!--/. container-fluid -->
     </section>
 </div>
@@ -130,6 +248,7 @@
 @push('scripts')
 <script>
 $(function () {
+  // Status Chart
   var statusChartCanvas = $('#statusChart').get(0).getContext('2d');
   var statusData = {
     labels: ['Approved', 'Pending', 'Rejected'],
@@ -145,6 +264,113 @@ $(function () {
       maintainAspectRatio : false,
       responsive : true,
     }
+  });
+
+  // AI Chat functionality
+  var $chatMessages = $('#ai-chat-messages');
+  var $form = $('#ai-chat-form');
+  var $prompt = $('#ai-prompt');
+  var $sendBtn = $('#ai-send-btn');
+  var isWaiting = false;
+
+  function scrollToBottom() {
+    $chatMessages.scrollTop($chatMessages[0].scrollHeight);
+  }
+
+  function addUserMessage(text) {
+    var html = '<div class="d-flex justify-content-end mb-3">' +
+      '<div class="bg-info text-white p-3 rounded shadow-sm" style="max-width: 85%;">' +
+      '<p class="mb-0">' + escapeHtml(text) + '</p>' +
+      '</div>' +
+      '<div class="ml-2"><span class="badge badge-secondary p-2"><i class="fas fa-user"></i></span></div>' +
+      '</div>';
+    $chatMessages.append(html);
+    scrollToBottom();
+  }
+
+  function addAIMessage(text) {
+    // Basic formatting: convert **bold**, *italic*, and newlines
+    var formatted = escapeHtml(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+
+    var html = '<div class="d-flex align-items-start mb-3">' +
+      '<div class="mr-2"><span class="badge badge-info p-2"><i class="fas fa-robot"></i></span></div>' +
+      '<div class="bg-white p-3 rounded shadow-sm" style="max-width: 85%;">' +
+      '<p class="mb-0">' + formatted + '</p>' +
+      '</div></div>';
+    $chatMessages.append(html);
+    scrollToBottom();
+  }
+
+  function showTypingIndicator() {
+    var html = '<div class="d-flex align-items-start mb-3" id="typing-indicator">' +
+      '<div class="mr-2"><span class="badge badge-info p-2"><i class="fas fa-robot"></i></span></div>' +
+      '<div class="bg-white p-3 rounded shadow-sm">' +
+      '<p class="mb-0 text-muted"><i class="fas fa-circle-notch fa-spin mr-1"></i> Thinking...</p>' +
+      '</div></div>';
+    $chatMessages.append(html);
+    scrollToBottom();
+  }
+
+  function removeTypingIndicator() {
+    $('#typing-indicator').remove();
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+  }
+
+  function sendMessage(promptText) {
+    if (isWaiting || !promptText.trim()) return;
+
+    isWaiting = true;
+    $sendBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+    $prompt.prop('disabled', true);
+
+    addUserMessage(promptText);
+    showTypingIndicator();
+
+    $.ajax({
+      url: '{{ route("student.ask-ai") }}',
+      method: 'POST',
+      data: {
+        _token: '{{ csrf_token() }}',
+        prompt: promptText
+      },
+      success: function(response) {
+        removeTypingIndicator();
+        if (response.success) {
+          addAIMessage(response.answer);
+        } else {
+          addAIMessage('Sorry, something went wrong. Please try again.');
+        }
+      },
+      error: function() {
+        removeTypingIndicator();
+        addAIMessage('Sorry, I could not process your request right now. Please try again later.');
+      },
+      complete: function() {
+        isWaiting = false;
+        $sendBtn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Ask');
+        $prompt.prop('disabled', false).val('').focus();
+      }
+    });
+  }
+
+  $form.on('submit', function(e) {
+    e.preventDefault();
+    sendMessage($prompt.val());
+  });
+
+  // Quick suggestion buttons
+  $('.ai-suggestion').on('click', function() {
+    var promptText = $(this).data('prompt');
+    $prompt.val(promptText);
+    sendMessage(promptText);
   });
 });
 </script>
