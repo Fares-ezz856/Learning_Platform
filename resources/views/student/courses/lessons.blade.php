@@ -90,6 +90,7 @@
 <script>
 $(function() {
     const lessons = @json($course->lessons);
+    const storageBase = "{{ asset('storage') }}";
     let currentIndex = 0;
 
     function renderLesson(index) {
@@ -114,7 +115,7 @@ $(function() {
 
         if (lesson.content_type === 'video') {
             // Check if it's a URL (YouTube/Vimeo) or a local file
-            if (lesson.content_data.includes('youtube.com') || lesson.content_data.includes('youtu.be')) {
+            if (lesson.content_data && (lesson.content_data.includes('youtube.com') || lesson.content_data.includes('youtu.be'))) {
                 let videoId = '';
                 if (lesson.content_data.includes('v=')) {
                     videoId = lesson.content_data.split('v=')[1].split('&')[0];
@@ -125,19 +126,25 @@ $(function() {
                     <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
                 </div>`);
             } else {
-                container.html(`<video width="100%" height="auto" controls style="max-height: 500px;">
-                    <source src="/storage/${lesson.content_data}" type="video/mp4">
+                const videoUrl = lesson.content_data.startsWith('http') ? lesson.content_data : `${storageBase}/${lesson.content_data}`;
+                container.html(`<video width="100%" height="auto" controls style="max-height: 500px; background: #000;" preload="metadata">
+                    <source src="${videoUrl}" type="video/mp4">
+                    <source src="${videoUrl}" type="video/ogg">
+                    <source src="${videoUrl}" type="video/webm">
                     Your browser does not support the video tag.
                 </video>`);
+                
+                // Add a small delay and try to play if they want autoplay, 
+                // but usually user interaction is better.
             }
         } else if (lesson.content_type === 'pdf') {
-            container.html(`<iframe src="/storage/${lesson.content_data}" width="100%" height="600px" style="border: none;"></iframe>`);
+            const pdfUrl = lesson.content_data.startsWith('http') ? lesson.content_data : `${storageBase}/${lesson.content_data}`;
+            container.html(`<iframe src="${pdfUrl}" width="100%" height="600px" style="border: none;"></iframe>`);
         } else if (lesson.content_type === 'image') {
-            container.html(`<div class="text-center p-2"><img src="/storage/${lesson.content_data}" class="img-fluid" style="max-height: 600px; border-radius: 4px;"></div>`);
+            const imgUrl = lesson.content_data.startsWith('http') ? lesson.content_data : `${storageBase}/${lesson.content_data}`;
+            container.html(`<div class="text-center p-2"><img src="${imgUrl}" class="img-fluid" style="max-height: 600px; border-radius: 4px;"></div>`);
         } else if (lesson.content_type === 'article') {
             container.addClass('bg-light').html(`<div class="p-4" style="color: #333; font-size: 1.1rem; line-height: 1.6;">${lesson.content_data}</div>`);
-            // If article is very long, maybe show it below the container too
-            // articleSection.show().find('#article-body').html(lesson.content_data);
         }
     }
 
