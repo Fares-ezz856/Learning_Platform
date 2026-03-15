@@ -12,6 +12,7 @@ use App\Models\Course;
 use App\Models\Instructor;
 use App\Models\Lesson;
 use App\Models\Review;
+use App\Repository\InstructorRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +21,16 @@ use Illuminate\Support\Facades\Storage;
 
 class InstructorController extends Controller
 {
+    private $repo;
+    public function __construct(InstructorRepository $instructorRepository)
+    {
+       $this->repo=$instructorRepository;
+    }
     use ApiResponse;
     public function register(InstructorRequest $request)
     {
         $validated = $request->validated();
-        $instructor     = Instructor::create($validated);
+        $instructor     = $this->repo->register($validated);
         $token     = $instructor->createToken('Instructor-Token')->plainTextToken;
         return $this->success('Registered Successfully', 201, $token);
     }
@@ -53,18 +59,22 @@ class InstructorController extends Controller
 
     public function my_student()
     {
-        $instructor_id     = auth('instructor')->id();
-        $coursewithstudent = Course::where('instructor_id', $instructor_id)->with('students:id,name')->get();
+
+        $coursewithstudent = $this->repo->mystudent();
+        if($coursewithstudent->isEmpty()){
+            return $this->error('You no have any stundets',200);
+        }
         return $this->success('Students list by course', 200, StudentResource::collection($coursewithstudent));
     }
     public function edit(Request $request)
     {
-        $instructor = auth('instructor')->user();
+        // $instructor = auth('instructor')->user();
         $validated  = $request->validate([
             'name' => 'sometimes|min:3',
             'bio'  => 'sometimes',
         ]);
-        $instructor->update($validated);
+        // $instructor->update($validated);
+        $instructor=$this->repo->edit($validated);
         return $this->success('Profile updated successfully', 200, $instructor);
     }
 
@@ -102,7 +112,7 @@ class InstructorController extends Controller
     }
     public function getlesson($id)
     {
-        $lessons = Lesson::findOrFail($id);
+        $lessons = $this->repo->getlesson($id);
         if ($lessons->content_type != 'article') {
             $lessons->content_data = asset('/storage/' . $lessons->content_data);
         }
@@ -111,7 +121,7 @@ class InstructorController extends Controller
 
     public function getreviews()
     {
-        $reviews = Review::where('instructor_id', auth('instructor')->id())->with('student:id,name')->get();
+        $reviews = $this->repo->getreviews();
         if ($reviews->isEmpty()) {
             return $this->error('Not Found Any Review For You', 404);
         }
@@ -119,7 +129,7 @@ class InstructorController extends Controller
     }
 
  public function mycourses(){
-    $courses=Course::where('instructor_id',auth('instructor')->id())->where('status','approved')->get();
+    $courses=$this->repo->mycourses();
     if($courses->isEmpty()){
         return $this->error('Not Found Any Courses',404);
     }
@@ -433,7 +443,7 @@ public function countcourse(){
             return redirect()->back()->with('success', 'Lesson created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-           
+
             if (isset($path) && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
@@ -443,8 +453,24 @@ public function countcourse(){
     }
 
     public function getcontacts(){
-        $contacts=Contact::all();
-        return view('instructor.contacts',compact('contacts'));
+        $instructor = auth('instructor_web')->user();
+        $contacts = Contact::where('instructor_id', $instructor->id)
+                           ->orWhereNull('instructor_id') // Allow generic messages to be seen too, or change this to only their messages
+                           ->latest()
+                           ->get();
+        return view('instructor.contacts', compact('contacts'));
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $instructor = auth('instructor_web')->user();
+        $instructor->update(['fcm_token' => $request->fcm_token]);
+
+        return response()->json(['success' => true]);
     }
 
 }

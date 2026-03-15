@@ -15,7 +15,11 @@
 
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="{{route('contact')}}" class="nav-link">Contact</a>
+        <!-- @if(auth('student_web')->check())
+             <a href="{{ route('student.dashboard') }}#name" class="nav-link">Contact</a>
+        @else -->
+             <a href="{{ route('contact.view') }}" class="nav-link">Contact</a>
+        <!-- @endif -->
       </li>
     </ul>
 

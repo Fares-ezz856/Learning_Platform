@@ -14,22 +14,26 @@ use App\Models\Review;
 use App\Models\Student;
 use App\Models\Course;
 use App\Models\Instructor;
-
-use App\Models\Payment;
-
+use App\Models\Lesson;
+use App\Repository\StudentRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+
 
 class StudentController extends Controller
 {
+    private $repo;
+    public function __construct(StudentRepository $studentRepository)
+    {
+        $this->repo=$studentRepository;
+    }
       use ApiResponse;
     public function register(StudentRequest $request){
         $validated=$request->validated();
-            $admin=Student::create($validated);
-            $token=$admin->createToken('Student-Token')->plainTextToken;
+            $student=$this->repo->register($validated);
+            $token=$student->createToken('Student-Token')->plainTextToken;
             return $this->success('Registered Successfully',201,$token);
     }
     public function login(Request $request){
@@ -63,15 +67,15 @@ class StudentController extends Controller
       return $this->success('Joined successfully', 200);
     }
     public function courses(){
-        $courses=Course::all();
+        $courses=$this->repo->courses();
         if($courses->isempty()){
             return $this->success('No Found Courses',200);
         }
         return $this->success('This is all courses',200,$courses);
     }
     public function hiscourses(){
-        $student=auth('student')->user();
-        $courses=$student->courses()->with('instructor:id,name')->get();
+
+        $courses=$this->repo->mycourses();
 
         if ($courses->isempty()) {
         return $this->success('You have not joined any courses yet.', 200);
@@ -79,8 +83,8 @@ class StudentController extends Controller
         return $this->success('This is Your Courses',200,$courses);
     }
     public function hislessons(){
-        $student=auth('student')->user();
-        $lessons=$student->courses()->wherePivot('status','approved')->with('lessons:id,title,course_id')->get();
+
+        $lessons=$this->repo->mylessons();
              if ($lessons->isempty()) {
         return $this->success('You have not joined any lessons yet.', 200);
     }
@@ -121,213 +125,127 @@ class StudentController extends Controller
             return $this->success('Password Updated successfully',200);
     }
 
-    public function dashboardView(){
-        $student = auth('student_web')->user();
+    public function dashboard()
+    {
+        $student = auth('student')->user();
         if (!$student) {
-            return redirect()->route('student.login');
+            return $this->error('Unauthorized', 401);
         }
+
         $course_count = $student->courses()->count();
         $approved_courses = $student->courses()->wherePivot('status', 'approved')->get();
+
         $lesson_count = 0;
         foreach ($approved_courses as $course) {
             $lesson_count += $course->lessons()->count();
         }
 
-        $enrolled_courses = $student->courses()->with('instructor')->get();
+        $enrolled_courses = $student->courses()->with('instructor:id,name')->get();
 
-        $lessons = collect();
-        foreach ($approved_courses as $course) {
-            $lessons = $lessons->merge($course->lessons()->with('course')->get());
+        return $this->success('Student Dashboard Data', 200, [
+            'stats' => [
+                'course_count' => $course_count,
+                'lesson_count' => $lesson_count,
+            ],
+            'enrolled_courses' => $enrolled_courses,
+        ]);
+    }
+
+    public function courseDetails($id)
+    {
+        $course = Course::with(['instructor:id,name,bio', 'lessons:id,title,course_id,order'])->findOrFail($id);
+
+        // Check if student is joined
+        $student = auth('student')->user();
+        $is_joined = $student->courses()->where('course_id', $id)->exists();
+        $status = $is_joined ? $student->courses()->where('course_id', $id)->first()->pivot->status : null;
+
+        return $this->success('Course Details', 200, [
+            'course' => $course,
+            'enrollment_status' => $status,
+            'is_joined' => $is_joined
+        ]);
+    }
+
+    public function lessonDetails($id)
+    {
+        $lesson = Lesson::with('course')->findOrFail($id);
+        $student = auth('student')->user();
+
+        // Check enrollment and approval
+        $is_approved = $student->courses()
+            ->where('course_id', $lesson->course_id)
+            ->wherePivot('status', 'approved')
+            ->exists();
+
+        if (!$is_approved) {
+            return $this->error('You are not enrolled in this course or your enrollment is not approved yet.', 403);
         }
-        $lessons = $lessons->sortByDesc('created_at')->take(10); // Show most recent 10 lessons
 
-        // Chart Data: Enrollment Type Distribution
-        $statusDistribution = [
-            'approved' => $student->courses()->wherePivot('status', 'approved')->count(),
-            'pending' => $student->courses()->wherePivot('status', 'pending')->count(),
-            'rejected' => $student->courses()->wherePivot('status', 'rejected')->count(),
-        ];
+        if ($lesson->content_type != 'article') {
+            $lesson->content_data = asset('/storage/' . $lesson->content_data);
+        }
 
-        return view('student.dashboard', compact('student', 'course_count', 'lesson_count', 'enrolled_courses', 'statusDistribution', 'lessons'));
+        return $this->success('Lesson Details', 200, $lesson);
     }
 
-    public function myCoursesWeb()
+    public function searchCourses(Request $request)
     {
-        $student = auth('student_web')->user();
-        $courses = $student->courses()->with('instructor')->get();
-        return view('student.courses.index', compact('courses'));
-    }
-
-    public function courseLessonsWeb($courseId)
-    {
-        $student = auth('student_web')->user();
-        $course = $student->courses()->where('course_id', $courseId)->wherePivot('status', 'approved')->with('lessons')->firstOrFail();
-        return view('student.courses.lessons', compact('course'));
-    }
-
-    public function browseCoursesWeb()
-    {
-        $student = auth('student_web')->user();
-        $joinedCourseIds = $student->courses()->pluck('courses.id')->toArray();
+        $query = $request->query('query');
+        if (!$query) {
+            return $this->error('Search query is required', 400);
+        }
 
         $courses = Course::where('status', 'approved')
-            ->whereNotIn('id', $joinedCourseIds)
-            ->with('instructor')
-            ->withCount('students')
+            ->where(function($q) use ($query) {
+                $q->where('title', 'LIKE', "%{$query}%")
+                  ->orWhere('description', 'LIKE', "%{$query}%");
+            })
+            ->with('instructor:id,name')
             ->get();
 
-        return view('student.courses.browse', compact('courses'));
+        return $this->success('Search results', 200, $courses);
     }
 
-    public function joinCourseWeb($id)
+    public function instructorProfile($id)
     {
-        $student = auth('student_web')->user();
+        $instructor = Instructor::with(['courses' => function($q) {
+            $q->where('status', 'approved');
+        }])->findOrFail($id);
 
-        if ($student->courses()->where('course_id', $id)->exists()) {
-            return redirect()->back()->with('info', 'You have already requested to join this course.');
-        }
-
-        $course = Course::findOrFail($id);
-
-        // If the course is paid, redirect to payment checkout
-        if (!$course->isFree()) {
-            return redirect()->route('student.payment.checkout', $id);
-        }
-
-        // Free course: enroll directly
-        $student->courses()->attach($id, ['status' => 'pending']);
-
-        return redirect()->route('student.courses.index')->with('success', 'Your request to join the course has been sent to the instructor.');
+        return $this->success('Instructor Profile', 200, $instructor);
     }
 
-    public function paymentCheckoutWeb($id)
+    private function sendFcmNotification($token, $title, $body)
     {
-        $student = auth('student_web')->user();
-        $course = Course::with('instructor')->findOrFail($id);
+        $fcmUrl = 'https://fcm.googleapis.com/fcm/send';
 
-        // Prevent double enrollment
-        if ($student->courses()->where('course_id', $id)->exists()) {
-            return redirect()->route('student.courses.index')->with('info', 'You are already enrolled in this course.');
+        $serverKey = env('FIREBASE_SERVER_KEY');
+        if (!$serverKey) {
+            Log::warning('FIREBASE_SERVER_KEY is not set in .env. Skipping notification.');
+            return;
         }
 
-        // Free courses don't need payment
-        if ($course->isFree()) {
-            return redirect()->route('student.courses.join', $id);
-        }
+        $headers = [
+            'Authorization' => 'key=' . $serverKey,
+            'Content-Type' => 'application/json',
+        ];
 
-        return view('student.payment.checkout', compact('course'));
-    }
-
-    public function processPaymentWeb(Request $request, $id)
-    {
-        $student = auth('student_web')->user();
-        $course = Course::findOrFail($id);
-
-        // Prevent double enrollment
-        if ($student->courses()->where('course_id', $id)->exists()) {
-            return redirect()->route('student.courses.index')->with('info', 'You are already enrolled in this course.');
-        }
-
-        $request->validate([
-            'payment_method' => 'required|in:credit_card,paypal,bank_transfer',
-            'cardholder_name' => 'required_if:payment_method,credit_card|string|max:255',
-            'card_number' => 'required_if:payment_method,credit_card|string|max:19',
-            'expiry' => 'required_if:payment_method,credit_card|string|max:5',
-            'cvv' => 'required_if:payment_method,credit_card|string|max:4',
-        ]);
-
-        // Create payment record (simulated – always succeeds)
-        $payment = Payment::create([
-            'student_id' => $student->id,
-            'course_id' => $course->id,
-            'amount' => $course->price,
-            'payment_method' => $request->payment_method,
-            'transaction_id' => 'TXN-' . strtoupper(Str::random(12)),
-            'status' => 'completed',
-        ]);
-
-        // Enroll student in course
-        $student->courses()->attach($course->id, ['status' => 'pending']);
-
-        return redirect()->route('student.courses.index')->with('success', 'Payment of $' . number_format($course->price, 2) . ' completed successfully! Your enrollment is pending instructor approval.');
-    }
-
-    public function paymentHistoryWeb()
-    {
-        $student = auth('student_web')->user();
-        $payments = $student->payments()->with('course')->latest()->get();
-        return view('student.payment.history', compact('payments'));
-    }
-
-    public function profileViewWeb()
-    {
-        $student = auth('student_web')->user();
-        return view('student.profile', compact('student'));
-    }
-
-    public function profileUpdateWeb(Request $request)
-    {
-        $student = auth('student_web')->user();
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,' . $student->id,
-            'password' => 'nullable|min:6|confirmed',
-        ]);
-
-        $student->name = $validated['name'];
-        $student->email = $validated['email'];
-        if ($request->filled('password')) {
-            $student->password = Hash::make($validated['password']);
-        }
-        $student->save();
-        return redirect()->back()->with('success', 'Profile updated successfully.');
-    }
-
-    public function askAI(Request $request)
-    {
-        $request->validate([
-            'prompt' => 'required|string|max:2000',
-        ]);
-
-        $student = auth('student_web')->user();
-        $courseNames = $student->courses()->wherePivot('status', 'approved')->pluck('title')->implode(', ');
-
-        $systemContext = "You are a helpful AI study assistant for a student named {$student->name} on an educational platform. ";
-        if ($courseNames) {
-            $systemContext .= "The student is currently enrolled in these courses: {$courseNames}. ";
-        }
-        $systemContext .= "Help them with their studies, answer questions about their courses, explain concepts, suggest study tips, and motivate them. Keep answers concise and helpful. Respond in the same language the student uses.";
-
-        $fullPrompt = $systemContext . "\n\nStudent's question: " . $request->prompt;
+        $payload = [
+            'to' => $token,
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+                'icon' => asset('favicon.ico'),
+                'click_action' => route('instructor.contacts.index'),
+            ],
+        ];
 
         try {
-            $result = Gemini::generativeModel('gemini-2.0-flash')->generateContent($fullPrompt);
-            return response()->json([
-                'success' => true,
-                'answer' => $result->text(),
-            ]);
+            \Illuminate\Support\Facades\Http::withHeaders($headers)
+                ->post($fcmUrl, $payload);
         } catch (\Exception $e) {
-            Log::error('Gemini AI Error in Student Assistant: ' . $e->getMessage(), [
-                'exception' => $e,
-                'student_id' => $student->id
-            ]);
-            return response()->json([
-                'success' => false,
-                'answer' => 'Sorry, I could not process your request. Please try again later. (Error: ' . $e->getMessage() . ')',
-            ], 500);
+            Log::error('FCM Notification Error: ' . $e->getMessage());
         }
-    }
-   
-
-    public function contact(Request $request){
-       $validated= $request->validate([
-            'name'=>'required|string',
-            'email'=>'required|email',
-            'phone'=>'nullable',
-            'message'=>'required|string'
-        ]);
-        Contact::create($validated);
-        Mail::to($request->email)->send(new ContactMail() );
-        return redirect()->back()->with('success','Your Message Sent Successfully');
     }
 }

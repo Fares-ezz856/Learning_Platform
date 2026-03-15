@@ -66,5 +66,65 @@
 <!-- PAGE SCRIPTS -->
 <script src="{{asset('dist/js/pages/dashboard2.js')}}"></script>
 @stack('scripts')
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+<script>
+  // Firebase Configuration - placeholders to be filled by the user
+  const firebaseConfig = {
+    apiKey: "{{ env('FIREBASE_API_KEY') }}",
+    authDomain: "{{ env('FIREBASE_AUTH_DOMAIN') }}",
+    projectId: "{{ env('FIREBASE_PROJECT_ID') }}",
+    storageBucket: "{{ env('FIREBASE_STORAGE_BUCKET') }}",
+    messagingSenderId: "{{ env('FIREBASE_MESSAGING_SENDER_ID') }}",
+    appId: "{{ env('FIREBASE_APP_ID') }}"
+  };
+
+  if (firebaseConfig.apiKey) {
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    @if(auth('instructor_web')->check())
+      // Request permission and get token for instructors
+      messaging.requestPermission()
+        .then(function() {
+          return messaging.getToken();
+        })
+        .then(function(token) {
+          console.log("FCM Token:", token);
+          // Send token to server
+          $.ajax({
+            url: "{{ route('instructor.update-fcm-token') }}",
+            type: "POST",
+            data: {
+              _token: "{{ csrf_token() }}",
+              fcm_token: token
+            },
+            success: function(response) {
+              console.log("Token updated successfully");
+            }
+          });
+        })
+        .catch(function(err) {
+          console.error("Firebase permission/token error:", err);
+        });
+
+      // Handle background messages (optional, requires service worker)
+      messaging.onMessage(function(payload) {
+        console.log("Message received: ", payload);
+        const notificationTitle = payload.notification.title;
+        const notificationOptions = {
+          body: payload.notification.body,
+          icon: payload.notification.icon,
+        };
+        new Notification(notificationTitle, notificationOptions);
+      });
+    @endif
+  } else {
+    console.warn("Firebase configuration is missing. Notifications will not work.");
+  }
+</script>
 </body>
 </html>

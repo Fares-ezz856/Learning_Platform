@@ -28,4 +28,8 @@ class Instructor extends Authenticatable
 public function reviews(){
     return $this->hasMany(Review::class);
 }
+
+public function contacts(){
+    return $this->hasMany(Contact::class);
+}
 }

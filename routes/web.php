@@ -39,6 +39,7 @@ Route::middleware(['auth:admin_web'])->group(function () {
     Route::post('/admin/profile', [AdminController::class, 'profileUpdateWeb'])->name('admin.profile.update');
 
     Route::get('/admin/contacts',[AdminController::class,'getcontacts'])->name('admin.contacts.index');
+    Route::get('/admin/deletecontact/{id}',[AdminController::class,'deletecontact'])->name('contact.delete');
 });
 
 // Instructor Authentication (Web)
@@ -59,6 +60,9 @@ Route::middleware(['auth:student_web'])->group(function () {
     Route::post('/student/courses/{id}/join', [StudentController::class, 'joinCourseWeb'])->name('student.courses.join');
     Route::get('/student/courses/{id}/lessons', [StudentController::class, 'courseLessonsWeb'])->name('student.courses.lessons');
 
+    Route::get('/student/contact', function() {
+        return redirect()->route('student.dashboard');
+    })->name('contact.view');
     Route::post('/student/contact', [StudentController::class, 'contact'])->name('contact');
     // Route::post('/student/contact/create',[StudentController::class,'createcontact'])->name('createcontact');
 
@@ -105,6 +109,7 @@ Route::middleware(['auth:instructor_web'])->group(function () {
     // Instructor Profile Routes
     Route::get('/instructor/profile', [InstructorController::class, 'profileViewWeb'])->name('instructor.profile');
     Route::post('/instructor/profile', [InstructorController::class, 'profileUpdateWeb'])->name('instructor.profile.update');
+    Route::post('/instructor/update-fcm-token', [InstructorController::class, 'updateFcmToken'])->name('instructor.update-fcm-token');
 });
 
 Route::get('/gemini', [GeminiController::class, 'index'])->name('gemini.index');

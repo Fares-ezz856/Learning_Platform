@@ -96,6 +96,11 @@
                         @else
                           <span class="text-muted small">Awaiting Access</span>
                         @endif
+                        <button type="button" class="btn btn-sm btn-info contact-instructor-btn" 
+                                data-instructor-id="{{ $course->instructor_id }}" 
+                                data-instructor-name="{{ $course->instructor->name }}">
+                          Contact
+                        </button>
                       </td>
                     </tr>
                     @endforeach
@@ -202,6 +207,12 @@
                       {{ session('success') }}
                     </div>
                   @endif
+
+                  <input type="hidden" name="instructor_id" id="contact_instructor_id">
+                  <div id="instructor-info-alert" class="alert alert-info d-none">
+                      Contacting Instructor: <strong id="selected-instructor-name"></strong>
+                      <button type="button" class="close" id="clear-instructor-selection">&times;</button>
+                  </div>
 
                   <div class="form-group">
                     <label for="name">Name</label>
@@ -435,6 +446,26 @@ $(function () {
     var promptText = $(this).data('prompt');
     $prompt.val(promptText);
     sendMessage(promptText);
+  });
+
+  // Contact Instructor Button Logic
+  $('.contact-instructor-btn').on('click', function() {
+    var instructorId = $(this).data('instructor-id');
+    var instructorName = $(this).data('instructor-name');
+    
+    $('#contact_instructor_id').val(instructorId);
+    $('#selected-instructor-name').text(instructorName);
+    $('#instructor-info-alert').removeClass('d-none');
+    
+    // Scroll to contact form
+    $('html, body').animate({
+      scrollTop: $("#name").offset().top - 100
+    }, 500);
+  });
+
+  $('#clear-instructor-selection').on('click', function() {
+    $('#contact_instructor_id').val('');
+    $('#instructor-info-alert').addClass('d-none');
   });
 });
 </script>

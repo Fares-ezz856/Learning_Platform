@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Interface\AdminInterface;
+use App\Interface\InstructorInterface;
+use App\Interface\StudentInterface;
+use App\Repository\AdminRepository;
+use App\Repository\InstructorRepository;
+use App\Repository\StudentRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -14,7 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(AdminInterface::class,AdminRepository::class);
+        $this->app->bind(InstructorInterface::class,InstructorRepository::class);
+        $this->app->bind(StudentInterface::class,StudentRepository::class);
     }
 
     /**

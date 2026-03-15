@@ -9,6 +9,13 @@
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>Contact Messages</h1>
+                      @if(session('success'))
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Success!</h5>
+                    {{ session('success') }}
+                </div>
+            @endif
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -38,6 +45,7 @@
                                         <th>Phone</th>
                                         <th>Message</th>
                                         <th>Date</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -49,6 +57,7 @@
                                         <td>{{ $contact->phone ?? 'N/A' }}</td>
                                         <td>{{ $contact->message }}</td>
                                         <td>{{ $contact->created_at->format('Y-m-d') }}</td>
+                                        <td><a class="btn btn-danger" href="{{ route('contact.delete',$contact->id) }}">Delete</a></td>
                                     </tr>
                                     @endforeach
                                 </tbody>

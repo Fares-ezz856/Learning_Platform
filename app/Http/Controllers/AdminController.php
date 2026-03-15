@@ -13,17 +13,24 @@ use App\Models\Course;
 use App\Models\Instructor;
 use App\Models\Lesson;
 use App\Models\Student;
+use App\Repository\AdminRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 
 class AdminController extends Controller
 {
+    private $repo;
+
+    public function __construct(AdminRepository $adminRepository)
+    {
+        $this->repo=$adminRepository;
+    }
     use ApiResponse;
     public function register(AdminRequest $request){
         $validated=$request->validated();
-            $admin=Admin::create($validated);
-            $token=$admin->createToken('Admin-Token')->plainTextToken;
+            $adminn=$this->repo->register($validated);
+            $token=$adminn->createToken('Admin-Token')->plainTextToken;
             return $this->success('Registered Successfully',201,$token);
     }
     public function login(Request $request){
@@ -47,21 +54,27 @@ class AdminController extends Controller
 
     }
     public function deletecourse($id){
-        $course=Course::find($id);
-        if(!$course){
-            return $this->error('This Course Not Found',200);
-        }
-        $coursename=$course->name;
-        $course->delete();
-        $course->lessons()->delete();
+        try{
+              $course=$this->repo->deletecourse($id);
+
+        $coursename=$course->title;
         return $this->success('This Course '.$coursename.'Deleted Successfully',200);
+        }
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'عذراً، هذا الكورس غير موجود في قاعدة البيانات'
+        ], 404);
+    }
+
     }
     public function deletelesson($id){
-        $lesson=Lesson::find($id);
+        $lesson=$this->repo->deletelesson($id);
             if(!$lesson){
             return $this->error('This Lesson Not Found',200);
         }
-        $lesson->delete();
+
         return $this->success('This Lesson'.$lesson->name.'Deleted Successfully',200);
     }
 
@@ -113,18 +126,7 @@ class AdminController extends Controller
     }
 
     public function dashboard(){
-        $instructor=Instructor::count();
-        $student=Student::count();
-        $course=Course::count();
-        $pending_course=Course::where('status','pending')->count();
-        $approved_course=Course::where('status','approved')->count();
-        $data=[
-            'instructor'=>$instructor,
-            'student'=>$student,
-            'course'=>$course,
-            'pending_course'=>$pending_course,
-            'approved_course'=>$approved_course
-        ];
+      $data=$this->repo->dashboard();
         return $this->success('Admin Dashboard Data',200,$data);
     }
 
@@ -296,5 +298,10 @@ class AdminController extends Controller
     public function getcontacts(){
         $contacts=Contact::all();
         return view('admin.contacts',compact('contacts'));
+    }
+    public function deletecontact($id){
+        $contact=Contact::findOrFail($id);
+        $contact->delete();
+        return redirect()->back()->with('success','Deleted Successfully');
     }
 }

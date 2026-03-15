@@ -56,6 +56,10 @@ Route::post('addreview','AddReview')->middleware('auth:student');
 Route::put('edit','edit')->middleware('auth:student');
 Route::put('updatepassword','updatepassword')->middleware('auth:student');
 Route::get('dashboard','dashboard')->middleware('auth:student');
+Route::get('course/{id}', 'courseDetails')->middleware('auth:student');
+Route::get('lesson/{id}', 'lessonDetails')->middleware('auth:student');
+Route::get('courses/search', 'searchCourses')->middleware('auth:student');
+Route::get('instructor/{id}', 'instructorProfile')->middleware('auth:student');
 });
 
 Route::post('instructor/sendmessage',[MessageController::class,'store'])->middleware('auth:instructor');
